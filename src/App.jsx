@@ -6,6 +6,8 @@ import Admin from './components/admin/Admin';
 import { MobHeaderProvider } from './context/MobHeader';
 import Approvals from './components/admin/Approvals';
 import History from './components/admin/History';
+import AddVolunteer from './components/admin/AddVolunteer';
+import SurveyorList from './components/admin/SurveyorList';
 import Surveyor from './components/surveyor/Surveyor';
 import Login from './components/login/Login';
 import Signup from './components/login/Signup';
@@ -25,6 +27,8 @@ function App() {
             <Route path="/admin/dashboard" element={<Admin />} />
             <Route path="admin/approvals" element={<Approvals />} />
             <Route path="admin/history" element={<History />} />
+            <Route path="admin/addVolunteer" element={<AddVolunteer />} />
+            <Route path="admin/surveyorList" element={<SurveyorList />} />
             <Route path="surveyor/dashboard" element={<Surveyor />} />
             <Route path="surveyor/history" element={<SurHistory />} />
             <Route path="polling-booths" element={<PollingBooth />} />

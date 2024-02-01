@@ -1,0 +1,57 @@
+.onBoard_cnt {
+    display: flex;
+    flex-direction: column;
+    /* align-items: center; */
+    gap: 15px;
+    margin-top: 0;
+}
+
+.onBoard_input-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.onBoard_inp-n {
+    font-family: Roboto;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 14px;
+    letter-spacing: 0px;
+    text-align: left;
+    color: #282323;
+    width: 50%;
+}
+
+.onBoard_inp-fld {
+    width: 50%;
+}
+
+.on__Board-sec {
+    padding: 0 40px;
+}
+
+.sur_vl-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.close-btn {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 10px;
+    right: 20px;
+    border: 1px solid #AFACAC;
+    border-radius: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .close-btn i {
+    font-size: 17px;
+    color: #AFACAC;
+  }

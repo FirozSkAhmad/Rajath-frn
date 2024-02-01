@@ -276,3 +276,197 @@
 .hs_sh-sr {
     width: 48%;
 }
+
+.sur_srt-sec {
+    padding: 0 20px;
+}
+
+.sur_Row1 {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    align-items: center;
+}
+
+.sc-icn i {
+    font-size: 12px;
+}
+
+.sur_ref-btn button {
+    padding: 0;
+}
+
+.sur_ref-btn i {
+    font-size: 20px;
+}
+
+.sur_Row2 {
+    display: flex;
+    justify-content: space-between;
+    /* gap: 20px; */
+    align-items: center;
+    margin-top: 15px;
+}
+
+.sur_pr {
+    width: 48%;
+}
+
+.sur_as {
+    width: 48%;
+}
+
+.sur_Row3 {
+    display: flex;
+    margin-top: 15px;
+}
+
+.sur_bt {
+    width: 48%;
+}
+
+.sur_Row4 {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.sur__Table {
+    margin-top: 15px;
+}
+
+.sur_m-modal .modal-header {
+    border: none;
+}
+
+.sur_edit-modal .modal-header {
+    border: none;
+}
+
+
+
+
+
+
+
+.sur_m-cnt {
+    display: flex;
+    flex-direction: column;
+    /* align-items: center; */
+    gap: 17px;
+    margin-top: 0;
+}
+
+
+
+
+/* new */
+.sur_mn-ttl {
+    padding: 10px 15px;
+    background: #6B46C1;
+    display: flex;
+}
+
+.sr_mn-as {
+    width: 40%;
+}
+
+.sr_dt-div {
+    padding: 0 15px;
+    margin-top: 20px;
+}
+
+.sr_mn-tlk {
+    width: 60%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.sr_mn-sec {
+    display: flex;
+    justify-content: center;
+    gap: 7rem;
+}
+
+.sr_dt-card {
+    padding-bottom: 5px;
+    border-bottom: 1px solid #C1C0C0;
+    padding-top: 5px;
+}
+
+.sr_dt-tlk-list {
+    margin-bottom: 10px;
+}
+
+.sur_mn-ttl span {
+    font-family: Roboto;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 19px;
+    letter-spacing: 0em;
+    text-align: left;
+    color: #fff;
+}
+
+.sr_dt-card {
+    display: flex;
+}
+
+.sr_dt-as span {
+    font-family: Roboto;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 19px;
+    letter-spacing: 0em;
+    text-align: left;
+    color: #000000;
+}
+
+.sr_dt-tlk {
+    display: flex;
+    justify-content: space-between;
+    /* gap: 7rem; */
+}
+
+.sr-dt-tlk_lst {
+    width: 60%;
+}
+
+.sr_dt-as {
+    width: 40%;
+}
+
+.sr_tlk-n a {
+    font-family: Roboto;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 19px;
+    letter-spacing: 0em;
+    text-align: left;
+    color: #000;
+}
+
+.sr_tlk-n span {
+    font-family: Roboto;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 19px;
+    letter-spacing: 0em;
+    text-align: left;
+}
+
+.sr_tlk-sts i {
+    font-size: 20px;
+}
+
+.sr-red i {
+    color: #F11111;
+}
+
+.sr-yellow i {
+    color: #EEF316;
+}
+
+.sr-green i {
+    color: #68D391;
+}

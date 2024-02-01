@@ -77,6 +77,8 @@ const Login = () => {
           // Use the Navigate component to redirect
           navigate("/admin/dashboard");
           // <Navigate to="/admin/dashboard" />;
+          const surveyorId = data?.data?.id;
+          localStorage.setItem("surveyor_id", surveyorId);
         } else {
           // You can use the Navigate component or another method to redirect to the user dashboard
           // return <Navigate to="/user/dashboard" />;
