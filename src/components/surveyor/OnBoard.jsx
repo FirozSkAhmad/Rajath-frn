@@ -2,9 +2,12 @@ import React, { useState, useEffect } from "react";
 import "./volunteerOnBoard.css";
 import MobHeader from "../header/MobHeader";
 import MobileModal from "../menu/MobileModal";
-import { useMobHeaderContext } from "../../context/MobHeader";
+// import { useMobHeaderContext } from "../../context/MobHeader";
 
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
+
+import sharedContext from "../../context/SharedContext";
+import { useContext } from "react";
 
 import { Link } from "react-router-dom";
 import BASEURL from "../../data/baseurl";
@@ -13,7 +16,7 @@ import toast from "react-hot-toast";
 const OnBoard = () => {
   const navigate = useNavigate();
 
-  const { isMobModalOpen, closeMobModal } = useMobHeaderContext();
+  const { isMobModalOpen, closeMobModal } = useContext(sharedContext);
 
   let params = useParams();
   let [searchParams] = useSearchParams();

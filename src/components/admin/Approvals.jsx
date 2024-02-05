@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import MobHeader from "../header/MobHeader";
-import { useMobHeaderContext } from '../../context/MobHeader';
+// import { useMobHeaderContext } from '../../context/MobHeader';
 import MobileModal from '../menu/MobileModal';
 
 import BASEURL from '../../data/baseurl';
@@ -9,8 +9,11 @@ import ApprovalCustomModal from './ApprovalCustomModal';
 
 import { ThreeCircles } from 'react-loader-spinner';
 
+import sharedContext from "../../context/SharedContext";
+import { useContext } from "react";
+
 const Approvals = () => {
-    const { isMobModalOpen, closeMobModal } = useMobHeaderContext();
+    const { isMobModalOpen, closeMobModal } = useContext(sharedContext);
 
     const [userList, setUserList] = useState(null);
 

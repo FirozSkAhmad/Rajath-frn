@@ -1,158 +1,182 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import MobHeader from "../header/MobHeader";
-import { useMobHeaderContext } from '../../context/MobHeader';
-import MobileModal from '../menu/MobileModal';
+// import { useMobHeaderContext } from "../../context/MobHeader";
+import MobileModal from "../menu/MobileModal";
 
-import BASEURL from '../../data/baseurl';
+import BASEURL from "../../data/baseurl";
 import "./approval.css";
-import SurveyorCustomModel from './SurveyorCustomModel';
+import SurveyorCustomModel from "./SurveyorCustomModel";
 
-import { ThreeCircles } from 'react-loader-spinner';
+import { TextField, Autocomplete } from "@mui/material";
+
+import { ThreeCircles } from "react-loader-spinner";
+
+import sharedContext from "../../context/SharedContext";
+import { useContext } from "react";
 
 const SurveyorList = () => {
-    const { isMobModalOpen, closeMobModal } = useMobHeaderContext();
+  const { isMobModalOpen, closeMobModal } = useContext(sharedContext);
 
-    const [surveyorList, setSurveyorList] = useState(null);
+  const [surveyorList, setSurveyorList] = useState(null);
 
-    const [selectedItem, setSelectedItem] = useState(null);
-    const [serialNumber, setSerialNumber] = useState(null);
-
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filteredItems, setFilteredItems] = useState([]);
-
-
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalData, setModalData] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalData, setModalData] = useState(null);
+  const [listOfSurveyorNames, setListOfSurveyorNames] = useState([]);
+  const [selectedSurveyorName, setSelectedSurveyorName] = useState(null);
 
 
-    // Function to handle input change and update filtered items
-    const handleInputChange = (e) => {
-        e.preventDefault();
+  const token = localStorage.getItem("accessToken");
+  // console.log(token);
+
+  const fetchSurveyorList = async () => {
+    var myHeaders = new Headers();
+    myHeaders.append("Authorization", `Bearer ${token}`);
+
+    var requestOptions = {
+      method: "GET",
+      headers: myHeaders,
+      redirect: "follow",
     };
+    try {
+      const response = await fetch(
+        `${BASEURL.url}/admin/getAllSurveyorDetails`,
+        requestOptions
+      );
+      const data = await response.json();
 
+      const surveyors = data.data;
 
-    const token = localStorage.getItem("accessToken");
-    // console.log(token);
+      // Filter data based on the selectedDate, selectedAssembly, and selectedTaluka
+      const filteredData = surveyors.filter((item) => {
+        const surveyorNameFilter =
+          selectedSurveyorName === null ||
+          item.surveyor_name === selectedSurveyorName;
 
-    const fetchUserList = async () => {
-        var myHeaders = new Headers();
-        myHeaders.append("Authorization", `Bearer ${token}`);
+        return surveyorNameFilter;
+      });
 
-        var requestOptions = {
-            method: 'GET',
-            headers: myHeaders,
-            redirect: 'follow'
-        };
-        try {
-            const response = await fetch(`${BASEURL.url}/admin/getAllSurveyorDetails`, requestOptions);
-            const data = await response.json();
-            console.log("users", data);
-            const surveyors = data.data;
-            setSurveyorList(surveyors);
-            // handleUserList(users);
-            // console.log(users)
-        } catch (error) {
-            console.log('error', error);
-        }
+      setSurveyorList(filteredData);
+      // handleUserList(users);
+      // console.log(users)
+    } catch (error) {
+      console.log("error", error);
     }
+  };
 
-    const handleViewDetails = (data) => {
-        setModalData(data);
-        setIsModalOpen(true);
+  const fetchSurveyorNames = async () => {
+    var myHeaders = new Headers();
+    myHeaders.append("Authorization", `Bearer ${token}`);
+
+    var requestOptions = {
+      method: "GET",
+      headers: myHeaders,
+      redirect: "follow",
     };
+    try {
+      const response = await fetch(
+        `${BASEURL.url}/admin/getAllSurveyorNames`,
+        requestOptions
+      );
+      const Response = await response.json();
 
-    useEffect(() => {
-        fetchUserList();
-    }, [])
+      const surveyorNames = Response.data;
 
-    return (
-        <>
-            <div className='pg__Wrap'>
-                <MobHeader></MobHeader>
-                <div className='approval__Sec'>
-                    <div className='app_Row1'>
-                        <div className='app_fl-dt'>
-                            <div className='input-group'>
-                                <span className="input-group-text sc-icn" id="basic-addon1">
-                                    <i className="fa-solid fa-magnifying-glass"></i>
-                                </span>
-                                <input
-                                    type='date'
-                                    className="form-control"
-                                    list="datalistOptions"
-                                    id="exampleDataList"
-                                    placeholder="Type to search..." />
-                            </div>
-                        </div>
-                        <div className='app_ref-btn'>
-                            <button className='btn' onClick={() => fetchUserList(userList)}>
-                                <i className="fa-solid fa-rotate-right"></i>
+      setListOfSurveyorNames(surveyorNames);
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+  const handleViewDetails = (data) => {
+    setModalData(data);
+    setIsModalOpen(true);
+  };
+
+  const fetchData = () => {
+    fetchSurveyorList();
+    fetchSurveyorNames();
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [selectedSurveyorName]);
+
+  return (
+    <>
+      <div className="pg__Wrap">
+        <MobHeader></MobHeader>
+        <div className="approval__Sec">
+          
+          <div className="app_Table">
+            <table className="table align-middle">
+              <thead className="align-middle table-primary">
+                <tr className="align-middle">
+                  <th scope="col">Surveyor Name</th>
+                  <th scope="col">Phone no</th>
+                  <th scope="col">Action</th>
+                </tr>
+              </thead>
+              <tbody className="align-middle">
+                {surveyorList === null ? (
+                  <tr>
+                    <td colSpan="4">
+                      <ThreeCircles
+                        visible={true}
+                        height="100"
+                        width="100"
+                        color="#4fa94d"
+                        ariaLabel="three-circles-loading"
+                        wrapperStyle={{}}
+                        wrapperClass="loader"
+                      />
+                    </td>
+                  </tr>
+                ) : (
+                  <>
+                    {Array.isArray(surveyorList) && surveyorList.length > 0 ? (
+                      surveyorList.map((item) => (
+                        <tr key={item.id}>
+                          <td>{item.surveyor_name}</td>
+                          <td>
+                            {new Date(item.createdAt).toLocaleDateString()}
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              className="btn"
+                              onClick={() => handleViewDetails(item)}
+                            >
+                              <i className="fa-solid fa-eye"></i>
                             </button>
-                        </div>
-                    </div>
-                    <div className='app_Table'>
-                        <table className="table align-middle">
-                            <thead className='align-middle table-primary'>
-                                <tr className='align-middle'>
-                                    <th scope="col">Surveyor Name</th>
-                                    <th scope="col">Phone no</th>
-                                    <th scope="col">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="align-middle">
-                                {surveyorList === null ? (
-                                    <tr>
-                                        <td colSpan="4">
-                                            <ThreeCircles
-                                                visible={true}
-                                                height="100"
-                                                width="100"
-                                                color="#4fa94d"
-                                                ariaLabel="three-circles-loading"
-                                                wrapperStyle={{}}
-                                                wrapperClass="loader"
-                                            />
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    <>
-                                        {Array.isArray(surveyorList) && surveyorList.length > 0 ? (
-                                            surveyorList.map((item) => (
-                                                <tr key={item.id}>
-                                                    <td>{item.surveyor_name}</td>
-                                                    <td>{new Date(item.createdAt).toLocaleDateString()}</td>
-                                                    <td>
-                                                        <button
-                                                            type="button"
-                                                            className="btn"
-                                                            onClick={() => handleViewDetails(item)}
-                                                        >
-                                                            <i className="fa-solid fa-eye"></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan="4">No data exits that need to be approved.</td>
-                                            </tr>
-                                        )}
-                                    </>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <MobileModal isOpen={isMobModalOpen} onClose={closeMobModal}></MobileModal>
-            <SurveyorCustomModel
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                data={modalData}
-                fetchUserList={()=>fetchUserList()}
-            ></SurveyorCustomModel>
-        </>
-    )
-}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4">
+                          No data exits that need to be approved.
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <MobileModal
+        isOpen={isMobModalOpen}
+        onClose={closeMobModal}
+      ></MobileModal>
+      <SurveyorCustomModel
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        data={modalData}
+        fetchUserList={() => fetchUserList()}
+      ></SurveyorCustomModel>
+    </>
+  );
+};
 
-export default SurveyorList
+export default SurveyorList;

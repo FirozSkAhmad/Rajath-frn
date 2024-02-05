@@ -1,9 +1,8 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Routing from "./Routing";
-// import Surveyor from './components/surveyor/Surveyor';
 import Admin from './components/admin/Admin';
-import { MobHeaderProvider } from './context/MobHeader';
+import SharedState from './context/SharedState'
 import Approvals from './components/admin/Approvals';
 import History from './components/admin/History';
 import AddVolunteer from './components/admin/AddVolunteer';
@@ -15,11 +14,11 @@ import SurHistory from './components/surveyor/SurHistory';
 import PollingBooth from './components/surveyor/PollingBooth';
 import BoothAddress from './components/surveyor/BoothAddress';
 import OnBoard from './components/surveyor/OnBoard';
-function App() {
 
+function App() {
   return (
     <>
-      <MobHeaderProvider>
+      <SharedState>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Routing />} />
@@ -42,7 +41,7 @@ function App() {
             <Route />
           </Routes>
         </BrowserRouter>
-      </MobHeaderProvider>
+      </SharedState>
     </>
   )
 }

@@ -6,13 +6,16 @@ import MobHeader from "../header/MobHeader";
 import YellowSvg from "../../../public/assets/images/Yellow.svg";
 import GreenSvg from "../../../public/assets/images/Green.svg";
 import RedSvg from "../../../public/assets/images/red.svg";
-import { useMobHeaderContext } from "../../context/MobHeader";
+// import { useMobHeaderContext } from "../../context/MobHeader";
 import DetailModal from "./ModalDetail";
 
 import { ThreeCircles } from 'react-loader-spinner';
 
+import sharedContext from "../../context/SharedContext";
+import { useContext } from "react";
+
 const Admin = () => {
-  const { isMobModalOpen, closeMobModal } = useMobHeaderContext();
+  const { isMobModalOpen, closeMobModal } = useContext(sharedContext);
   const [assemblyData, setAssemblyData] = useState(null);
   const [overViewData, setOverViewData] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);

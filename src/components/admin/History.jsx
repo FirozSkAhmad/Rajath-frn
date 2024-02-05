@@ -6,19 +6,23 @@ import MobHeader from "../header/MobHeader";
 import YellowSvg from "../../../public/assets/images/Yellow.svg";
 import GreenSvg from "../../../public/assets/images/Green.svg";
 import RedSvg from "../../../public/assets/images/red.svg";
-import { useMobHeaderContext } from "../../context/MobHeader";
+// import { useMobHeaderContext } from "../../context/MobHeader";
 import BoothModal from "./ModalBoothId";
+import { TextField, Autocomplete } from "@mui/material";
 
-import { ThreeCircles } from 'react-loader-spinner';
+import { ThreeCircles } from "react-loader-spinner";
+
+import sharedContext from "../../context/SharedContext";
+import { useContext } from "react";
 
 const History = () => {
-  const { isMobModalOpen, closeMobModal } = useMobHeaderContext();
+  const { isMobModalOpen, closeMobModal } = useContext(sharedContext);
   const [assemblyData, setAssemblyData] = useState(null);
   const [overViewData, setOverViewData] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
-  const [selectedAssembly, setSelectedAssembly] = useState("All");
-  const [selectedTaluka, setSelectedTaluka] = useState("All");
+  const [selectedAssembly, setSelectedAssembly] = useState(null);
+  const [selectedTaluka, setSelectedTaluka] = useState(null);
   const [listOfTaluka, setListOfTaluka] = useState([]);
 
   const token = localStorage.getItem("accessToken");
@@ -60,13 +64,13 @@ const History = () => {
           const dateFilter =
             !selectedDate ||
             new Date(item.createdAt).toLocaleDateString() ===
-            new Date(selectedDate).toLocaleDateString();
+              new Date(selectedDate).toLocaleDateString();
 
           const assemblyFilter =
-            selectedAssembly === "All" || item.assembly === selectedAssembly;
+            selectedAssembly === null || item.assembly === selectedAssembly;
           // console.log(selectedAssembly);
           const talukaFilter =
-            selectedTaluka === "All" || item.taluka === selectedTaluka;
+            selectedTaluka === null || item.taluka === selectedTaluka;
 
           return dateFilter && assemblyFilter && talukaFilter;
         });
@@ -122,51 +126,55 @@ const History = () => {
       <div className="pg__Wrap">
         <div className="ad__Sec">
           <MobHeader></MobHeader>
-          <div className="hs_Row1">
+          <div className="hs_Row1" style={{display:'flex',justifyContent:'space-around'}}>
             <div className="hs_sh-p">
-              <select
-                className="form-select"
-                aria-label="Default select example"
-                onChange={(e) => setSelectedAssembly(e.target.value)}
-              >
-                <option value="All">Assembly</option>
-                <option value="Baramati">Baramati</option>
-                <option value="Satara">Satara</option>
-                <option value="Parbhani">Parbhani</option>
-                <option value="Buldhana">Buldhana</option>
-                <option value="Shirur">Shirur</option>
-                <option value="Osmanabad">Osmanabad</option>
-              </select>
+              <Autocomplete
+                className="auto__Fld"
+                autoHighlight
+                options={[
+                  "Baramati",
+                  "Satara",
+                  "Parbhani",
+                  "Buldhana",
+                  "Shirur",
+                  "Osmanabad",
+                ]}
+                value={selectedAssembly}
+                onChange={(event, newValue) => {
+                  setSelectedAssembly(newValue);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Assembly"
+                    variant="outlined"
+                    fullWidth
+                  />
+                )}
+              />
             </div>
             <div className="hs_sh-as">
-              <select
-                className="form-select"
-                aria-label="Default select example"
-                onChange={(e) => setSelectedTaluka(e.target.value)}
-              >
-                <option value="All">Taluka</option>
-                {listOfTaluka.map((item, index) => (
-                  <option value={item} key={index}>
-                    {item}
-                  </option>
-                ))}
-              </select>
+              <Autocomplete
+                className="auto__Fld"
+                autoHighlight
+                options={listOfTaluka}
+                value={selectedTaluka}
+                onChange={(event, newValue) => {
+                  setSelectedTaluka(newValue);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Taluka"
+                    variant="outlined"
+                    fullWidth
+                  />
+                )}
+              />
             </div>
           </div>
-          {/* <div className="hs_Row2">
-            <div className="hs_sh-sr">
-              <select
-                className="form-select"
-                aria-label="Default select example"
-              >
-                <option selected>Surveyor</option>
-                <option value="1">One</option>
-                <option value="2">Two</option>
-                <option value="3">Three</option>
-              </select>
-            </div>
-          </div> */}
-          <div className="ad_flt-dt">
+
+          <div className="ad_flt-dt" style={{ marginTop: "10px" }}>
             <div className="ad_flt-dt-bx">
               <div className="input-group">
                 <span className="input-group-text sc-icn" id="basic-addon1">
@@ -183,23 +191,6 @@ const History = () => {
               </div>
             </div>
           </div>
-          {/* 
-          <div className="ad__Row1">
-            <div className="ad_Rem-sec">
-              <div className="remark_sec remark_sec-g">
-                <i className="fa-solid fa-check"></i>
-                <span>{overViewData.Green}Booths</span>
-              </div>
-              <div className="remark_sec remark_sec-y">
-                <i className="fa-solid fa-check"></i>
-                <span>{overViewData.Yellow} Booths</span>
-              </div>
-              <div className="remark_sec remark_sec-r">
-                <i className="fa-solid fa-xmark"></i>
-                <span>{overViewData.Red}Booths</span>
-              </div>
-            </div>
-          </div> */}
 
           <div className="ad__Row3">
             <div className="ad_Table-sec">
@@ -253,7 +244,6 @@ const History = () => {
                     </>
                   )}
                 </tbody>
-
               </table>
             </div>
           </div>

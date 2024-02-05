@@ -1,306 +1,268 @@
-import React from 'react';
-import "./style.css";
+import React, { useState, useEffect } from "react";
 import MobHeader from "../header/MobHeader";
-import MobileModal from '../menu/MobileModal';
-import { useMobHeaderContext } from '../../context/MobHeader';
+import MobileModal from "../menu/MobileModal";
+import VolunteerDetailsCard from "./VolunteerDetailsCard";
+import BASEURL from "../../data/baseurl";
+// import "./approval.css";
+// import SurveyorCustomModel from "./SurveyorCustomModel";
+
+import { TextField, Autocomplete } from "@mui/material";
+
+import { ThreeCircles } from "react-loader-spinner";
+
+import sharedContext from "../../context/SharedContext";
+import { useContext } from "react";
 
 const SurHistory = () => {
-  const { isMobModalOpen, closeMobModal } = useMobHeaderContext();
+  const { isMobModalOpen, closeMobModal, setVolunteerData } =
+    useContext(sharedContext);
+
+  const [volunteersList, setVolunteersList] = useState(null);
+
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedAssembly, setSelectedAssembly] = useState(null);
+  const [selectedTaluka, setSelectedTaluka] = useState(null);
+
+  const [listOfTaluka, setListOfTaluka] = useState([]);
+
+  const [isVDCOpen, setIsVDCOpen] = useState(false);
+
+  const token = localStorage.getItem("accessToken");
+  const surveyor_id = localStorage.getItem("surveyor_id");
+
+  const fetchVolunteersData = async () => {
+    var myHeaders = new Headers();
+    myHeaders.append("Authorization", `Bearer ${token}`);
+
+    var requestOptions = {
+      method: "GET",
+      headers: myHeaders,
+      redirect: "follow",
+    };
+
+    try {
+      const response = await fetch(
+        `${BASEURL.url}/auth/getVolunteersDataBySurveyorId?surveyor_id=${surveyor_id}`,
+        requestOptions
+      );
+      const data = await response.json();
+
+      const VolunteersData = data.data;
+
+      // Filter data based on the selectedDate, selectedAssembly, and selectedTaluka
+      const filteredData = VolunteersData.filter((volunteer) => {
+        const dateFilter =
+          !selectedDate ||
+          new Date(volunteer.createdAt).toLocaleDateString() ===
+            new Date(selectedDate).toLocaleDateString();
+
+        const assemblyFilter =
+          selectedAssembly === null || volunteer.assembly === selectedAssembly;
+
+        const talukaFilter =
+          selectedTaluka === null || volunteer.taluka === selectedTaluka;
+
+        return dateFilter && assemblyFilter && talukaFilter;
+      });
+
+      setVolunteersList(filteredData);
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+  const getTalukasByAssembly = async (selectedAssembly) => {
+    try {
+      const response = await fetch(
+        `${BASEURL.url}/com/talukasByAssembly?assembly=${selectedAssembly}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      setListOfTaluka(data.data);
+      console.log(data.data);
+    } catch (err) {
+      console.log("Error fetching overview data:", err);
+    }
+  };
+
+  const handleViewDetails = (data) => {
+    setVolunteerData(data);
+    setIsVDCOpen(true);
+  };
+
+  const fetchData = () => {
+    fetchVolunteersData();
+  };
+
+  useEffect(() => {
+    fetchData();
+    getTalukasByAssembly(selectedAssembly);
+  }, [selectedDate, selectedAssembly, selectedTaluka]);
+
   return (
     <>
-      <div className='pg__Wrap'>
+      <div className="pg__Wrap">
         <MobHeader></MobHeader>
-        <div className='sur__Sec-wrap'>
-          <div className='sur_srt-sec'>
-            <div className='sur_Row1'>
-              <div className='sur_sc-dt'>
-                <div className='input-group'>
+        <div className="approval__Sec">
+          <div
+            className="hs_Row1"
+            style={{ display: "flex"}}
+          >
+            <div
+              className="ad_flt-dt"
+              style={{ marginTop: "10px", width: "100%" }}
+            >
+              <div className="ad_flt-dt-bx">
+                <div className="input-group">
                   <span className="input-group-text sc-icn" id="basic-addon1">
                     <i className="fa-solid fa-magnifying-glass"></i>
                   </span>
                   <input
-                    type='date'
+                    type="date"
                     className="form-control"
                     list="datalistOptions"
                     id="exampleDataList"
-                    placeholder="Type to search..." />
-                </div>
-
-              </div>
-              <div className='sur_ref-btn'>
-                <button className='btn'>
-                  <i className="fa-solid fa-rotate-right"></i>
-                </button>
-              </div>
-            </div>
-            <div className='sur_Row2'>
-              <div className='sur_pr'>
-                <div className="input-group">
-                  <input type="text" className="form-control" aria-label="Text input with dropdown button" />
-                  <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Parliament</button>
-                  <ul className="dropdown-menu dropdown-menu-end">
-                    <li><a className="dropdown-item" >Parliament1</a></li>
-                    <li><a className="dropdown-item" >Parliament2</a></li>
-                    <li><a className="dropdown-item" >Parliament3</a></li>
-                    <li><a className="dropdown-item" >Parliament4</a></li>
-                  </ul>
-                </div>
-              </div>
-              <div className='sur_as'>
-                <div className="input-group">
-                  <input type="text" className="form-control" aria-label="Text input with dropdown button" />
-                  <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Assembly</button>
-                  <ul className="dropdown-menu dropdown-menu-end">
-                    <li><a className="dropdown-item" >Assembly1</a></li>
-                    <li><a className="dropdown-item" >Assembly2</a></li>
-                    <li><a className="dropdown-item" >Assembly3</a></li>
-                    <li><a className="dropdown-item" >Assembly4</a></li>
-                  </ul>
+                    placeholder="Type to search..."
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                  />
                 </div>
               </div>
             </div>
-            <div className='sur_Row3'>
-              <div className='sur_bt'>
-                <div className="input-group">
-                  <input type="text" className="form-control" aria-label="Text input with dropdown button" />
-                  <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Booth</button>
-                  <ul className="dropdown-menu dropdown-menu-end">
-                    <li><a className="dropdown-item" >Booth1</a></li>
-                    <li><a className="dropdown-item" >Booth2</a></li>
-                    <li><a className="dropdown-item" >Booth3</a></li>
-                    <li><a className="dropdown-item" >Booth4</a></li>
-                  </ul>
-                </div>
-              </div>
+            <div className="app_ref-btn">
+              <button className="btn" onClick={() => fetchData()}>
+                <i className="fa-solid fa-rotate-right"></i>
+              </button>
             </div>
-            {/* <div className='sur_Row4'>
-              <div className='sur_add-vl'>
-                <button className='btn btn-primary' data-bs-toggle="modal" data-bs-target="#addVolModal">
-                  Add volunteer
-                </button>
-              </div>
-            </div> */}
           </div>
-          <div className='sur__Table'>
-            <table className="table">
-              <thead className='table-primary'>
-                <tr className=''>
+
+          <div
+            className="hs_Row1"
+            style={{ display: "flex", justifyContent: "space-around" }}
+          >
+            <div className="hs_sh-p">
+              <Autocomplete
+                className="auto__Fld"
+                autoHighlight
+                options={[
+                  "Baramati",
+                  "Satara",
+                  "Parbhani",
+                  "Buldhana",
+                  "Shirur",
+                  "Osmanabad",
+                ]}
+                value={selectedAssembly}
+                onChange={(event, newValue) => {
+                  setSelectedAssembly(newValue);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Assembly"
+                    variant="outlined"
+                    fullWidth
+                  />
+                )}
+              />
+            </div>
+            <div className="hs_sh-as">
+              <Autocomplete
+                className="auto__Fld"
+                autoHighlight
+                options={listOfTaluka}
+                value={selectedTaluka}
+                onChange={(event, newValue) => {
+                  setSelectedTaluka(newValue);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Taluka"
+                    variant="outlined"
+                    fullWidth
+                  />
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="app_Table">
+            <table className="table align-middle">
+              <thead className="align-middle table-primary">
+                <tr className="align-middle">
                   <th scope="col">Assembly</th>
-                  <th scope="col">Thaluka</th>
+                  <th scope="col">Taluka</th>
                   <th scope="col">Booth</th>
                   <th scope="col">Actions</th>
                 </tr>
               </thead>
-              <tbody className=''>
-                <tr className=''>
-                  <td>Assembly</td>
-                  <td>Thaluka</td>
-                  <td>Booth</td>
-                  <td className=''>
-                    <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#surEditModal">
-                      <i className="fa-solid fa-eye"></i>
-                    </button>
-                  </td>
-                </tr>
-                <tr className=''>
-                  <td>Assembly</td>
-                  <td>Thaluka</td>
-                  <td>Booth</td>
-                  <td className=''>
-                    <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#surEditModal">
-                      <i className="fa-solid fa-eye"></i>
-                    </button>
-                  </td>
-                </tr>
-                <tr className=''>
-                  <td>Assembly</td>
-                  <td>Thaluka</td>
-                  <td>Booth</td>
-                  <td className=''>
-                    <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#surEditModal">
-                      <i className="fa-solid fa-eye"></i>
-                    </button>
-                  </td>
-                </tr>
-                <tr className=''>
-                  <td>Assembly</td>
-                  <td>Thaluka</td>
-                  <td>Booth</td>
-                  <td className=''>
-                    <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#surEditModal">
-                      <i className="fa-solid fa-eye"></i>
-                    </button>
-                  </td>
-                </tr>
-                <tr className=''>
-                  <td>Assembly</td>
-                  <td>Thaluka</td>
-                  <td>Booth</td>
-                  <td className=''>
-                    <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#surEditModal">
-                      <i className="fa-solid fa-eye"></i>
-                    </button>
-                  </td>
-                </tr>
+              <tbody className="align-middle">
+                {volunteersList === null ? (
+                  <tr>
+                    <td colSpan="4">
+                      <ThreeCircles
+                        visible={true}
+                        height="100"
+                        width="100"
+                        color="#4fa94d"
+                        ariaLabel="three-circles-loading"
+                        wrapperStyle={{}}
+                        wrapperClass="loader"
+                      />
+                    </td>
+                  </tr>
+                ) : (
+                  <>
+                    {Array.isArray(volunteersList) &&
+                    volunteersList.length > 0 ? (
+                      volunteersList.map((item) => (
+                        <tr key={item.id}>
+                          <td>{item.assembly}</td>
+                          <td>{item.taluka}</td>
+                          <td>{item.booth}</td>
+                          <td>
+                            <button
+                              type="button"
+                              className="btn"
+                              onClick={() => handleViewDetails(item)}
+                            >
+                              <i className="fa-solid fa-eye"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4">
+                          No data exits that need to be approved.
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                )}
               </tbody>
             </table>
           </div>
         </div>
       </div>
-      <MobileModal isOpen={isMobModalOpen} onClose={closeMobModal}></MobileModal>
-      <div class="modal fade sur_edit-modal" id="surEditModal" tabindex="-1" aria-labelledby="surEditModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
-              {/* <h1 class="modal-title fs-5" id="surEditModalLabel">Modal title</h1> */}
-              {/* <span className='ad_si-no'>01</span> */}
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <div className='sur_m-cnt'>
-                <div className='sur_input-box'>
-                  <span className='sr_ed-inp-n'>
-                    Parliament
-                  </span>
-                  <div className='sr_ed-inp-fld'>
-                    <select class="form-select" aria-label="Default select example">
-                      <option selected>Select Parliament</option>
-                      <option value="1">One</option>
-                      <option value="2">Two</option>
-                      <option value="3">Three</option>
-                    </select>
-                  </div>
-                </div>
-                <div className='sur_input-box'>
-                  <span className='sr_ed-inp-n'>
-                    Assembly
-                  </span>
-                  <div className='sr_ed-inp-fld'>
-                    <select class="form-select" aria-label="Default select example">
-                      <option selected>Select Assembly</option>
-                      <option value="1">One</option>
-                      <option value="2">Two</option>
-                      <option value="3">Three</option>
-                    </select>
-                  </div>
-                </div>
-                <div className='sur_input-box'>
-                  <span className='sr_ed-inp-n'>
-                    Booth
-                  </span>
-                  <div className='sr_ed-inp-fld'>
-                    <select class="form-select" aria-label="Default select example">
-                      <option selected>Select Booth</option>
-                      <option value="1">One</option>
-                      <option value="2">Two</option>
-                      <option value="3">Three</option>
-                    </select>
-                  </div>
-                </div>
-                <div className='sur_input-box'>
-                  <span className='sr_ed-inp-n'>
-                    Booth Address
-                  </span>
-                  <div className='sr_ed-inp-fld'>
-                    <input type="text" class="form-control" id="" aria-describedby=""></input>
-                  </div>
-                </div>
-                <div className='sur_input-box'>
-                  <span className='sr_ed-inp-n'>
-                    Volunteer  Name
-                  </span>
-                  <div className='sr_ed-inp-fld'>
-                    <input type="text" class="form-control" id="" aria-describedby=""></input>
-                  </div>
-                </div>
-                <div className='sur_input-box'>
-                  <span className='sr_ed-inp-n'>
-                    Phone No
-                  </span>
-                  <div className='sr_ed-inp-fld'>
-                    <input type='tel' class="form-control" id="" aria-describedby=""></input>
-                  </div>
-                </div>
-                <div className='sur_input-box'>
-                  <span className='sr_ed-inp-n'>
-                    Email ID
-                  </span>
-                  <div className='sr_ed-inp-fld'>
-                    <input type='email' class="form-control" id="" aria-describedby=""></input>
-                  </div>
-                </div>
-                <div className='sur_input-box'>
-                  <span className='sr_ed-inp-n'>
-                    Gender
-                  </span>
-                  <div className='sr_ed-inp-fld'>
-                    <select class="form-select" aria-label="Default select example">
-                      <option selected>Male</option>
-                      <option value="1">Female</option>
-                      <option value="2">Others</option>
-                    </select>
-                  </div>
-                </div>
-                <div className='sur_input-box'>
-                  <span className='sr_ed-inp-n'>
-                    House no
-                  </span>
-                  <div className='sr_ed-inp-fld'>
-                    <input type="text" class="form-control" id="" aria-describedby=""></input>
-                  </div>
-                </div>
-                <div className='sur_input-box'>
-                  <span className='sr_ed-inp-n'>
-                    Age
-                  </span>
-                  <div className='sr_ed-inp-fld'>
-                    <input type="text" class="form-control" id="" aria-describedby=""></input>
-                  </div>
-                </div>
-                <div className='sur_input-box'>
-                  <span className='sr_ed-inp-n'>
-                    Caste
-                  </span>
-                  <div className='sr_ed-inp-fld'>
-                    <input type="text" class="form-control" id="" aria-describedby=""></input>
-                  </div>
-                </div>
-                <div className='sur_input-box'>
-                  <span className='sr_ed-inp-n'>
-                    Occupation
-                  </span>
-                  <div className='sr_ed-inp-fld'>
-                    <input type="text" class="form-control" id="" aria-describedby=""></input>
-                  </div>
-                </div>
-                <div className='sur_input-box'>
-                  <span className='sr_ed-inp-n'>
-                    Degination
-                  </span>
-                  <div className='sr_ed-inp-fld'>
-                    <select class="form-select" aria-label="Default select example">
-                      <option selected>Select Role</option>
-                      <option value="1">One</option>
-                      <option value="2">Two</option>
-                      <option value="3">Three</option>
-                    </select>
-                  </div>
-                </div>
-                <div className='sur_vl-btn'>
-                  <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Delete</button>&nbsp;&nbsp;&nbsp;
-                  <button type="button" class="btn btn-success">Edit</button>
-                </div>
-              </div>
-            </div>
-            {/* <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary">Save changes</button>
-                        </div> */}
-          </div>
-        </div>
-      </div>
+      <MobileModal
+        isOpen={isMobModalOpen}
+        onClose={closeMobModal}
+      ></MobileModal>
+      <VolunteerDetailsCard
+        isOpen={isVDCOpen}
+        onClose={() => setIsVDCOpen(false)}
+        fetchVolunteersData={() => fetchVolunteersData()}
+      ></VolunteerDetailsCard>
     </>
-  )
-}
+  );
+};
 
 export default SurHistory;

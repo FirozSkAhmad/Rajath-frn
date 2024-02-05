@@ -1,19 +1,30 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./pollingBooth.css";
 import MobHeader from "../header/MobHeader";
 import MobileModal from "../menu/MobileModal";
-import { useMobHeaderContext } from "../../context/MobHeader";
+// import { useMobHeaderContext } from "../../context/MobHeader";
+
+import VolunteerDetailsCard from "./VolunteerDetailsCard";
 
 import { Link, useSearchParams } from "react-router-dom";
 import BASEURL from "../../data/baseurl";
 
+import sharedContext from "../../context/SharedContext";
+import { useContext } from "react";
+
 const BoothAddress = () => {
-  const { isMobModalOpen, closeMobModal } = useMobHeaderContext();
+  // const navigate = useNavigate();
+  const { isMobModalOpen, closeMobModal, setVolunteerData } =
+    useContext(sharedContext);
+
   let [searchParams] = useSearchParams();
 
   const [boothData, setBoothData] = useState("");
   const [boothAddress, setBoothAddress] = useState("");
   const [volunteersData, setVolunteersData] = useState([]);
+
+  const [isVDCOpen, setIsVDCOpen] = useState(false);
 
   // Token
   const token = localStorage.getItem("accessToken");
@@ -23,45 +34,44 @@ const BoothAddress = () => {
   const taluka = searchParams.get("taluka");
   const booth = searchParams.get("booth");
 
-  useEffect(() => {
-    const getBoothDetailsByATB = async () => {
-      var myHeaders = new Headers();
-      myHeaders.append("Authorization", `Bearer ${token}`);
+  const getBoothDetailsByATB = async () => {
+    var myHeaders = new Headers();
+    myHeaders.append("Authorization", `Bearer ${token}`);
 
-      var requestOptions = {
-        method: "GET",
-        headers: myHeaders,
-        redirect: "follow",
-      };
-
-      try {
-        const response = await fetch(
-          `${BASEURL.url}/auth/getBoothDetailsByATB?assembly=${assembly}&taluka=${taluka}&booth=${booth}`,
-          requestOptions
-        );
-        const data = await response.json();
-        const boothData = data.data;
-        const boothAddress = boothData.address;
-        // const totalBooths = pollingBoothsData.length;
-        console.log("boothData", boothData);
-        console.log("boothAddress", boothAddress);
-        setBoothData(boothData);
-        setBoothAddress(boothAddress);
-        if (boothData.volunteers) {
-          console.log("I'm here in if condition");
-          setVolunteersData(boothData.volunteers);
-        }
-        // setTotalBooths(totalBooths);
-        // const users = data.data;
-        // setUserList(users);
-        // handleUserList(users);
-        // console.log(users)
-      } catch (error) {
-        console.log("error", error);
-      }
+    var requestOptions = {
+      method: "GET",
+      headers: myHeaders,
+      redirect: "follow",
     };
+
+    try {
+      const response = await fetch(
+        `${BASEURL.url}/auth/getBoothDetailsByATB?assembly=${assembly}&taluka=${taluka}&booth=${booth}`,
+        requestOptions
+      );
+      const data = await response.json();
+      const boothData = data.data;
+      const boothAddress = boothData.address;
+
+      setBoothData(boothData);
+      setBoothAddress(boothAddress);
+      if (boothData.volunteers) {
+        setVolunteersData(boothData.volunteers);
+      }
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+  useEffect(() => {
     getBoothDetailsByATB();
   }, []);
+
+  const handleClick = (data) => {
+    setVolunteerData(data);
+    // navigate("/VolunteerDetailsCard");
+    setIsVDCOpen(true);
+  };
 
   return (
     <>
@@ -89,7 +99,12 @@ const BoothAddress = () => {
                         Create
                       </Link>
                     ) : (
-                      <span className="bt_prs-filled">Filled</span>
+                      <div
+                        className="bt_prs-filled"
+                        onClick={() => handleClick(boothData.PRESIDENT)}
+                      >
+                        Filled
+                      </div>
                     )}
                   </span>
                 </li>
@@ -104,7 +119,12 @@ const BoothAddress = () => {
                         Create
                       </Link>
                     ) : (
-                      <span className="bt_prs-filled">Filled</span>
+                      <div
+                        className="bt_prs-filled"
+                        onClick={() => handleClick(boothData.BLA1)}
+                      >
+                        Filled
+                      </div>
                     )}
                   </span>
                 </li>
@@ -119,7 +139,12 @@ const BoothAddress = () => {
                         Create
                       </Link>
                     ) : (
-                      <span className="bt_prs-filled">Filled</span>
+                      <div
+                        className="bt_prs-filled"
+                        onClick={() => handleClick(boothData.BLA2)}
+                      >
+                        Filled
+                      </div>
                     )}
                   </span>
                 </li>
@@ -127,7 +152,12 @@ const BoothAddress = () => {
                   ? volunteersData.map((volunteerData, index) => (
                       <li key={index}>
                         <span>Volunteer {index + 1}</span>
-                        <span className="bt_prs-filled">Filled</span>
+                        <span
+                          className="bt_prs-filled"
+                          onClick={() => handleClick(volunteerData)}
+                        >
+                          Filled
+                        </span>
                       </li>
                     ))
                   : ""}
@@ -155,6 +185,11 @@ const BoothAddress = () => {
         isOpen={isMobModalOpen}
         onClose={closeMobModal}
       ></MobileModal>
+      <VolunteerDetailsCard
+        isOpen={isVDCOpen}
+        onClose={() => setIsVDCOpen(false)}
+        getBoothDetailsByATB={() => getBoothDetailsByATB()}
+      ></VolunteerDetailsCard>
     </>
   );
 };

@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { useMobHeaderContext } from '../../context/MobHeader';
+// import { useMobHeaderContext } from '../../context/MobHeader';
 import "./mobHeader.css";
 
+import sharedContext from "../../context/SharedContext";
+import { useContext } from "react";
+
 const MobHeader = () => {
-    const { openMobModal } = useMobHeaderContext();
+    const { openMobModal } = useContext(sharedContext);
     return (
         <div className='m_nav'>
             <div className='m_logo'>

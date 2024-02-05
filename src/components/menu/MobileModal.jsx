@@ -101,7 +101,9 @@ const MobileModal = ({ isOpen, onClose }) => {
                           History
                         </NavLink>
                       ) : (
-                        ""
+                        <NavLink to="/surveyor/history" onClick={onClose}>
+                          History
+                        </NavLink>
                       )}
                     </li>
                     <li>

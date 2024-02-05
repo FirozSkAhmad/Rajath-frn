@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import "./pollingBooth.css";
 import MobHeader from "../header/MobHeader";
 import MobileModal from '../menu/MobileModal';
-import { useMobHeaderContext } from '../../context/MobHeader';
+// import { useMobHeaderContext } from '../../context/MobHeader';
 
 import { useSearchParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
@@ -10,8 +10,12 @@ import BASEURL from '../../data/baseurl';
 
 import { ThreeCircles } from 'react-loader-spinner';
 
+import sharedContext from "../../context/SharedContext";
+import { useContext } from "react";
+
 const PollingBooth = () => {
-    const { isMobModalOpen, closeMobModal } = useMobHeaderContext();
+    const { isMobModalOpen, closeMobModal } = useContext(sharedContext);
+
     let [searchParams] = useSearchParams();
 
     const [pollingBooths, setPollingBooths] = useState('');
@@ -40,13 +44,8 @@ const PollingBooth = () => {
                 const data = await response.json();
                 const pollingBoothsData = data.data.booths;
                 const totalBooths = pollingBoothsData.length;
-                // console.log("pollingBoothsData", pollingBoothsData);
                 setPollingBooths(pollingBoothsData);
                 setTotalBooths(totalBooths);
-                // const users = data.data;
-                // setUserList(users);
-                // handleUserList(users);
-                // console.log(users)
             } catch (error) {
                 console.log('error', error);
             }
