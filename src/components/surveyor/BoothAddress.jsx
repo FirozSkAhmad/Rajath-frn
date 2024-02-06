@@ -74,7 +74,7 @@ const BoothAddress = () => {
           // Assuming you have a way to convert each section to a PDF document
           // Convert image URLs to Base64 if necessary
           if (value.photo_url) {
-            value.photo_url = await convertImageToBase64(value.photo_url);
+            value.img_url = await convertImageToBase64(value.photo_url);
           }
 
           const doc = <PdfGenerator volunteerData={value} />;
@@ -93,7 +93,7 @@ const BoothAddress = () => {
         let counter = 1; // Initialize counter for naming PDFs
         for (const volunteer of userData.volunteers) {
           if (volunteer.photo_url) {
-            volunteer.photo_url = await convertImageToBase64(
+            volunteer.img_url = await convertImageToBase64(
               volunteer.photo_url
             );
           }

@@ -126,7 +126,7 @@ const AddVolunteer = () => {
                     key !== "volunteers"
                   ) {
                     if (value.photo_url) {
-                      value.photo_url = await convertImageToBase64(
+                      value.img_url = await convertImageToBase64(
                         value.photo_url
                       );
                     }
@@ -147,7 +147,7 @@ const AddVolunteer = () => {
                   let counter = 1;
                   for (const volunteer of volunteerData.volunteers) {
                     if (volunteer.photo_url) {
-                      volunteer.photo_url = await convertImageToBase64(
+                      volunteer.img_url = await convertImageToBase64(
                         volunteer.photo_url
                       );
                     }

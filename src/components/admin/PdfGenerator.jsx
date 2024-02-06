@@ -50,11 +50,12 @@ const styles = StyleSheet.create({
 
 // Create Document Component
 const PdfGenerator = ({ volunteerData }) => {
+  console.log(volunteerData)
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.imageContainer}>
-          <Image style={styles.image} src={volunteerData.photo_url} />
+          <Image style={styles.image} src={volunteerData.img_url} />
         </View>
         <Text style={styles.header}>{volunteerData.booth_address}</Text>
         <View style={styles.detailSection}>
