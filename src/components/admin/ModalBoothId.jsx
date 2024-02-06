@@ -7,8 +7,8 @@ import DataPass from "./DataPass";
 const BoothModal = ({ selectedRow, onClose }) => {
   const [boothdata, setBoothData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [datapass, setDataPass] = useState([]);
   const [error, setError] = useState(null);
+  const [selectedVolunteer, setSelectedVolunteer] = useState(null);
 
   // token
   const token = localStorage.getItem("accessToken");
@@ -26,12 +26,12 @@ const BoothModal = ({ selectedRow, onClose }) => {
     }
   };
 
-  const renderStatusIcon = (status) => {
-    return status === "NOT FILLED" ? <img src={Red} alt="red" /> : "tick";
-  };
-
-  const updateDataPass = (data) => {
-    setDataPass([data]);
+  const renderStatusIcon = (data) => {
+    return data === "NOT FILLED" ? (
+      <img src={Red} alt="red" />
+    ) : (
+      `${data.volunteer_name} - ${data.phn_no}`
+    );
   };
 
   useEffect(() => {
@@ -61,8 +61,8 @@ const BoothModal = ({ selectedRow, onClose }) => {
       }
     };
     fetchBoothDetails();
-    console.log("getVolunteersByBoothId")
-  }, [selectedRow.booth_id]); // Include updateDataPass in the dependency array (removed updateDataPass from dependency array to avoid API call again and again)
+    console.log("getVolunteersByBoothId");
+  }, [selectedRow.booth_id]);
 
   return (
     <div className="modal admin_modal">
@@ -75,46 +75,88 @@ const BoothModal = ({ selectedRow, onClose }) => {
         {error && <p style={{ color: "red" }}>{error}</p>}
         {!loading && !error && (
           <>
-            {datapass.length > 0 ? (
-              // Render content based on datapass
-              datapass.map((data, index) => (
-                <DataPass data={data} index={index} key={index} />
-              ))
-            ) : (
-              // Render booth details
-              <>
-                <p onClick={() => updateDataPass(boothdata.PRESIDENT)}>
-                  Booth Level President: {renderStatusIcon(boothdata.PRESIDENT)}
-                </p>
-                <p onClick={() => updateDataPass(boothdata.BLA1)}>
-                  {/* Booth Level Agent 1: {boothdata.BLA1.volunteer_name} */}
-                  Booth Level Agent 1: {renderStatusIcon(boothdata.PRESIDENT)}
-                </p>
-                <p onClick={() => updateDataPass(boothdata.BLA2)}>
-                  Booth Level Agent 2: {renderStatusIcon(boothdata.BLA2)}
-                </p>
+            <p
+              onClick={() => {
+                if (
+                  boothdata.PRESIDENT &&
+                  boothdata.PRESIDENT !== "NOT FILLED"
+                ) {
+                  const updatedPresident = {
+                    ...boothdata.PRESIDENT, // Spread the existing properties
+                    designation: "PRESIDENT", // Add or overwrite the 'designation' key
+                  };
 
-                {boothdata.volunteers.map((volunteer, index) => (
-                  <p key={index} onClick={() => updateDataPass(volunteer)}>
-                    Booth Level Volunteer {index + 1}:{" "}
-                    {volunteer.volunteer_name} - {volunteer.phn_no}
-                  </p>
-                ))}
-                <p onClick={() => updateDataPass(selectedRow.booth_status)}>
-                  Booth Status:{" "}
-                  <span
-                    style={{ color: getWordColor(selectedRow.booth_status) }}
-                  >
-                    {selectedRow.booth_status === "YELLOW" && "Semi Filled"}
-                    {selectedRow.booth_status === "GREEN" && "Fully Filled"}
-                    {selectedRow.booth_status === "RED" && "Empty"}
-                  </span>
-                </p>
-              </>
-            )}
+                  setSelectedVolunteer(updatedPresident);
+                }
+              }}
+            >
+              Booth Level President: {renderStatusIcon(boothdata.PRESIDENT)}
+            </p>
+            <p
+              onClick={() => {
+                if (boothdata.BLA1 && boothdata.BLA1 !== "NOT FILLED") {
+                  const updatedBLA1 = {
+                    ...boothdata.BLA1, // Spread the existing properties
+                    designation: "BLA1", // Add or overwrite the 'designation' key
+                  };
+
+                  setSelectedVolunteer(updatedBLA1);
+                }
+              }}
+            >
+              {/* Booth Level Agent 1: {boothdata.BLA1.volunteer_name} */}
+              Booth Level Agent 1: {renderStatusIcon(boothdata.BLA1)}
+            </p>
+            <p
+              onClick={() => {
+                if (boothdata.BLA2 && boothdata.BLA2 !== "NOT FILLED") {
+                  const updatedBLA2 = {
+                    ...boothdata.BLA2, // Spread the existing properties
+                    designation: "BLA2", // Add or overwrite the 'designation' key
+                  };
+
+                  setSelectedVolunteer(updatedBLA2);
+                }
+              }}
+            >
+              Booth Level Agent 2: {renderStatusIcon(boothdata.BLA2)}
+            </p>
+
+            {boothdata.volunteers.map((volunteer, index) => (
+              <p
+                key={index}
+                onClick={() => {
+                  const updatedVolunteer = {
+                    ...volunteer, // Spread the existing properties
+                    designation: "VOLUNTEER", // Add or overwrite the 'designation' key
+                  };
+
+                  setSelectedVolunteer(updatedVolunteer);
+                }}
+              >
+                Booth Level Volunteer {index + 1}: {volunteer.volunteer_name} -{" "}
+                {volunteer.phn_no}
+              </p>
+            ))}
+            <p>
+              Booth Status:{" "}
+              <span style={{ color: getWordColor(selectedRow.booth_status) }}>
+                {selectedRow.booth_status === "YELLOW" && "Semi Filled"}
+                {selectedRow.booth_status === "GREEN" && "Fully Filled"}
+                {selectedRow.booth_status === "RED" && "Empty"}
+              </span>
+            </p>
           </>
         )}
       </div>
+      {selectedVolunteer && (
+        <DataPass
+          selectedVolunteer={selectedVolunteer}
+          onClose={() => {
+            setSelectedVolunteer(null);
+          }}
+        />
+      )}
     </div>
   );
 };

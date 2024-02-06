@@ -6,18 +6,17 @@ import MobHeader from "../header/MobHeader";
 import YellowSvg from "../../../public/assets/images/Yellow.svg";
 import GreenSvg from "../../../public/assets/images/Green.svg";
 import RedSvg from "../../../public/assets/images/red.svg";
-// import { useMobHeaderContext } from "../../context/MobHeader";
 import BoothModal from "./ModalBoothId";
 import { TextField, Autocomplete } from "@mui/material";
 
-import { ThreeCircles } from "react-loader-spinner";
-
 import sharedContext from "../../context/SharedContext";
 import { useContext } from "react";
+import Loader from "../Loader";
 
 const History = () => {
-  const { isMobModalOpen, closeMobModal } = useContext(sharedContext);
-  const [assemblyData, setAssemblyData] = useState(null);
+  const { isMobModalOpen, closeMobModal, setLoader } =
+    useContext(sharedContext);
+  const [assemblyData, setAssemblyData] = useState([]);
   const [overViewData, setOverViewData] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
@@ -26,6 +25,27 @@ const History = () => {
   const [listOfTaluka, setListOfTaluka] = useState([]);
 
   const token = localStorage.getItem("accessToken");
+
+  function getUniqueBooths(data) {
+    const uniqueBooths = [];
+    const lookup = {};
+
+    data.forEach((item) => {
+      const key = `${item.assembly}|${item.taluka}|${item.booth}|${item.booth_id}`;
+      if (!lookup[key]) {
+        uniqueBooths.push({
+          assembly: item.assembly,
+          taluka: item.taluka,
+          booth: item.booth,
+          booth_id: item.booth_id,
+          booth_status: item.booth_status,
+        });
+        lookup[key] = true;
+      }
+    });
+
+    return uniqueBooths;
+  }
 
   useEffect(() => {
     const fetchOverView = async () => {
@@ -41,6 +61,7 @@ const History = () => {
         const data = await response.json();
         setOverViewData(data.data);
       } catch (err) {
+        setLoader(false);
         console.log("Error fetching overview data:", err);
       }
     };
@@ -59,8 +80,10 @@ const History = () => {
 
         const data = await response.json();
 
+        const uniqueBooths = getUniqueBooths(data.data);
+
         // Filter data based on the selectedDate, selectedAssembly, and selectedTaluka
-        const filteredData = data.data.filter((item) => {
+        const filteredData = uniqueBooths.filter((item) => {
           const dateFilter =
             !selectedDate ||
             new Date(item.createdAt).toLocaleDateString() ===
@@ -68,7 +91,6 @@ const History = () => {
 
           const assemblyFilter =
             selectedAssembly === null || item.assembly === selectedAssembly;
-          // console.log(selectedAssembly);
           const talukaFilter =
             selectedTaluka === null || item.taluka === selectedTaluka;
 
@@ -77,6 +99,7 @@ const History = () => {
 
         setAssemblyData(filteredData);
       } catch (error) {
+        setLoader(false);
         console.error("Error fetching data:", error);
       }
     };
@@ -98,14 +121,15 @@ const History = () => {
         setListOfTaluka(data.data);
         console.log(data.data);
       } catch (err) {
+        setLoader(false);
         console.log("Error fetching overview data:", err);
       }
     };
-
+    setLoader(true);
     getTalukasByAssembly(selectedAssembly);
-
     fetchData();
     fetchOverView();
+    setLoader(false);
   }, [selectedDate, selectedAssembly, selectedTaluka]);
 
   const getStatusIcon = (status) => {
@@ -123,10 +147,14 @@ const History = () => {
 
   return (
     <>
+      <Loader />
       <div className="pg__Wrap">
         <div className="ad__Sec">
           <MobHeader></MobHeader>
-          <div className="hs_Row1" style={{display:'flex',justifyContent:'space-around'}}>
+          <div
+            className="hs_Row1"
+            style={{ display: "flex", justifyContent: "space-around" }}
+          >
             <div className="hs_sh-p">
               <Autocomplete
                 className="auto__Fld"
@@ -204,44 +232,26 @@ const History = () => {
                   </tr>
                 </thead>
                 <tbody className="align-middle">
-                  {assemblyData === null ? (
-                    <tr>
-                      <td colSpan="4">
-                        <ThreeCircles
-                          visible={true}
-                          height="100"
-                          width="100"
-                          color="#4fa94d"
-                          ariaLabel="three-circles-loading"
-                          wrapperStyle={{}}
-                          wrapperClass="loader"
-                        />
-                      </td>
-                    </tr>
+                  {assemblyData.length > 0 ? (
+                    assemblyData.map((item, index) => (
+                      <tr
+                        onClick={() => {
+                          // console.log("Row clicked:", item);
+                          setSelectedRow(item);
+                        }}
+                        key={index}
+                        className="align-middle"
+                      >
+                        <td className="align-middle">{item.assembly}</td>
+                        <td>{item.taluka}</td>
+                        <td>{item.booth}</td>
+                        <td>{getStatusIcon(item.booth_status)}</td>
+                      </tr>
+                    ))
                   ) : (
-                    <>
-                      {assemblyData.length > 0 ? (
-                        assemblyData.map((item, index) => (
-                          <tr
-                            onClick={() => {
-                              // console.log("Row clicked:", item);
-                              setSelectedRow(item);
-                            }}
-                            key={index}
-                            className="align-middle"
-                          >
-                            <td className="align-middle">{item.assembly}</td>
-                            <td>{item.taluka}</td>
-                            <td>{item.booth}</td>
-                            <td>{getStatusIcon(item.booth_status)}</td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="4">No data as per filter.</td>
-                        </tr>
-                      )}
-                    </>
+                    <tr>
+                      <td colSpan="4">No data as per filter.</td>
+                    </tr>
                   )}
                 </tbody>
               </table>

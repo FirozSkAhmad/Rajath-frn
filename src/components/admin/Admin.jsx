@@ -6,17 +6,17 @@ import MobHeader from "../header/MobHeader";
 import YellowSvg from "../../../public/assets/images/Yellow.svg";
 import GreenSvg from "../../../public/assets/images/Green.svg";
 import RedSvg from "../../../public/assets/images/red.svg";
-// import { useMobHeaderContext } from "../../context/MobHeader";
 import DetailModal from "./ModalDetail";
 
-import { ThreeCircles } from 'react-loader-spinner';
 
 import sharedContext from "../../context/SharedContext";
 import { useContext } from "react";
+import Loader from "../Loader";
 
 const Admin = () => {
-  const { isMobModalOpen, closeMobModal } = useContext(sharedContext);
-  const [assemblyData, setAssemblyData] = useState(null);
+  const { isMobModalOpen, closeMobModal, setLoader } =
+    useContext(sharedContext);
+  const [assemblyData, setAssemblyData] = useState([]);
   const [overViewData, setOverViewData] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
@@ -36,8 +36,8 @@ const Admin = () => {
         }
         const data = await response.json();
         setOverViewData(data.data);
-        // console.log(data.data);
       } catch (err) {
+        setLoader(false)
         console.log("Error fetching data :", err);
       }
     };
@@ -59,21 +59,24 @@ const Admin = () => {
         // Filter data based on the selectedDate
         const filteredData = selectedDate
           ? data.data.filter(
-            (item) =>
-              new Date(item.createdAt).toLocaleDateString() ===
-              new Date(selectedDate).toLocaleDateString()
-          )
+              (item) =>
+                new Date(item.createdAt).toLocaleDateString() ===
+                new Date(selectedDate).toLocaleDateString()
+            )
           : data.data;
 
         setAssemblyData(filteredData);
-        // console.log(filteredData);
+        setLoader(false);
       } catch (error) {
+        setLoader(false)
         console.error("Error fetching data:", error);
       }
     };
-
-    fetchData();
+    
+    setLoader(true);
     fetchOverView();
+    fetchData();
+    setLoader(false);
 
     // Cleanup function
     return () => {
@@ -96,6 +99,7 @@ const Admin = () => {
 
   return (
     <>
+      <Loader />
       <div className="pg__Wrap">
         <div className="ad__Sec">
           <MobHeader></MobHeader>
@@ -146,55 +150,36 @@ const Admin = () => {
                   </tr>
                 </thead>
                 <tbody className="align-middle">
-                  {assemblyData === null ? (
-                    <tr>
-                      <td colSpan="4">
-                        <ThreeCircles
-                          visible={true}
-                          height="100"
-                          width="100"
-                          color="#4fa94d"
-                          ariaLabel="three-circles-loading"
-                          wrapperStyle={{}}
-                          wrapperClass="loader"
-                        />
-                      </td>
-                    </tr>
+                  {assemblyData.length > 0 ? (
+                    assemblyData.map((item, index) => (
+                      <tr
+                        onClick={() => {
+                          console.log("Row clicked:", item);
+                          setSelectedRow(item);
+                        }}
+                        key={index}
+                        className="align-middle"
+                      >
+                        <td className="align-middle">{item.surveyor_name}</td>
+                        <td>{new Date(item.createdAt).toLocaleDateString()}</td>
+                        <td>{item.taluka}</td>
+                        <td>{getStatusIcon(item.booth_status)}</td>
+                      </tr>
+                    ))
                   ) : (
-                    <>
-                      {assemblyData.length > 0 ? (
-                        assemblyData.map((item, index) => (
-                          <tr
-                            onClick={() => {
-                              console.log("Row clicked:", item);
-                              setSelectedRow(item);
-                            }}
-                            key={index}
-                            className="align-middle"
-                          >
-                            <td className="align-middle">{item.surveyor_name}</td>
-                            <td>{new Date(item.createdAt).toLocaleDateString()}</td>
-                            <td>{item.taluka}</td>
-                            <td>{getStatusIcon(item.booth_status)}</td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="4">No data as per filter.</td>
-                        </tr>
-                      )}
-                    </>
+                    <tr>
+                      <td colSpan="4">No data as per filter.</td>
+                    </tr>
                   )}
                 </tbody>
-
-
               </table>
             </div>
           </div>
         </div>
       </div>
       <MobileModal
-        isOpen={isMobModalOpen} onClose={closeMobModal}
+        isOpen={isMobModalOpen}
+        onClose={closeMobModal}
       ></MobileModal>
       {selectedRow && (
         <DetailModal

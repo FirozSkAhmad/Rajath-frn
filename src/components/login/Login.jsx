@@ -1,17 +1,16 @@
-import React, { useState } from "react";
-// import MobHeader from "../header/MobHeader";
-// import { useMobHeaderContext } from '../../context/MobHeader';
-// import MobileModal from '../menu/MobileModal';
+import React, { useState, useContext } from "react";
 
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
-import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import BASEURL from "../../data/baseurl";
+import toast from "react-hot-toast";
+import sharedContext from "../../context/SharedContext";
+import Loader from "../Loader"
 
 const Login = () => {
-  // const { isMobModalOpen, closeMobModal } = useMobHeaderContext();
+  const { setLoader } = useContext(sharedContext);
 
   // useNavigate
   const navigate = useNavigate();
@@ -36,10 +35,9 @@ const Login = () => {
   // Handle submit function
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setLoader(true);
     var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
-    // myHeaders.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MDU3NjQxMjEsImV4cCI6MTczNzMyMTcyMSwiYXVkIjoiMTpTVVBFUiBBRE1JTiIsImlzcyI6InBhYmFwcGxpY2F0aW9uIn0.4dkblN2KV86c5MQu85PnFsnDVq1j9uTvmh5tJ9x1YA4");
 
     var raw = JSON.stringify({
       phn_no: formData.phn_no,
@@ -54,10 +52,7 @@ const Login = () => {
     };
 
     try {
-      const response = await fetch(
-        `${BASEURL.url}/auth/login`,
-        requestOptions
-      );
+      const response = await fetch(`${BASEURL.url}/auth/login`, requestOptions);
 
       if (response.ok) {
         setIsAuthorized(true);
@@ -70,28 +65,28 @@ const Login = () => {
 
         localStorage.setItem("role_type", role_type);
 
-        console.log("role_type", role_type);
-
         // Redirect to the appropriate dashboard
         if (role_type === "SUPER ADMIN") {
           // Use the Navigate component to redirect
-          navigate("/admin/dashboard");
-          // <Navigate to="/admin/dashboard" />;
+          setLoader(false);
           const surveyorId = data?.data?.id;
           localStorage.setItem("surveyor_id", surveyorId);
+          navigate("/admin/dashboard");
+          toast.success("logined Successfully");
         } else {
           // You can use the Navigate component or another method to redirect to the user dashboard
-          // return <Navigate to="/user/dashboard" />;
+          setLoader(false);
           const surveyorId = data?.data?.id;
           localStorage.setItem("surveyor_id", surveyorId);
           navigate("/surveyor/dashboard");
+          toast.success("logined Successfully");
         }
       } else {
         // If login fails, parse and display the error response
         const errorResponse = await response.json();
+        toast.error("Login failed:", errorResponse.message);
+        setLoader(false);
         setError(errorResponse.message);
-        console.error("Login failed:", errorResponse.message);
-        // console.error('Login failed');
       }
     } catch (error) {
       console.log("error", error);
@@ -100,8 +95,8 @@ const Login = () => {
 
   return (
     <>
+      <Loader />
       <div className="pg__Wrap">
-        {/* <MobHeader></MobHeader> */}
         <div className="c_Logo-wrap">
           <div className="logo_mb-s">
             <img src="assets/images/logo-m.png" alt="logo" />
