@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import "./pollingBooth.css";
 import MobHeader from "../header/MobHeader";
 import MobileModal from "../menu/MobileModal";
-// import { useMobHeaderContext } from "../../context/MobHeader";
+import { pdf } from "@react-pdf/renderer";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
+import PdfGenerator from "../admin/PdfGenerator";
 
 import VolunteerDetailsCard from "./VolunteerDetailsCard";
 
@@ -14,7 +16,6 @@ import sharedContext from "../../context/SharedContext";
 import { useContext } from "react";
 
 const BoothAddress = () => {
-  // const navigate = useNavigate();
   const { isMobModalOpen, closeMobModal, setVolunteerData } =
     useContext(sharedContext);
 
@@ -33,6 +34,89 @@ const BoothAddress = () => {
   const assembly = searchParams.get("assembly");
   const taluka = searchParams.get("taluka");
   const booth = searchParams.get("booth");
+
+  const convertImageToBase64 = async (imageUrl) => {
+    try {
+      const response = await fetch(
+        `${BASEURL.url}/admin/convert-image-to-base64?url=${imageUrl}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(data.base64Image);
+      return data.base64Image;
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  const downloadPDF = async (userData) => {
+    try {
+      const zip = new JSZip();
+      // Main folder name comes from userData.address
+      const mainFolder = zip.folder(userData.address);
+
+      // Iterate over userData to process each key/value where value is an object
+      for (const [key, value] of Object.entries(userData)) {
+        if (
+          typeof value === "object" &&
+          value !== null &&
+          key !== "volunteers"
+        ) {
+          // Assuming you have a way to convert each section to a PDF document
+          // Convert image URLs to Base64 if necessary
+          if (value.photo_url) {
+            value.photo_url = await convertImageToBase64(value.photo_url);
+          }
+
+          const doc = <PdfGenerator volunteerData={value} />;
+          const asPdf = pdf([]);
+          asPdf.updateContainer(doc);
+          const blob = await asPdf.toBlob();
+
+          // Add the PDF blob to the folder with the key name
+          mainFolder.file(`${key}.pdf`, blob, { binary: true });
+        }
+      }
+
+      // Special handling for 'volunteers' array to generate multiple PDFs
+      if (userData.volunteers && Array.isArray(userData.volunteers)) {
+        const volunteersFolder = mainFolder.folder("volunteers");
+        let counter = 1; // Initialize counter for naming PDFs
+        for (const volunteer of userData.volunteers) {
+          if (volunteer.photo_url) {
+            volunteer.photo_url = await convertImageToBase64(
+              volunteer.photo_url
+            );
+          }
+          const doc = <PdfGenerator volunteerData={volunteer} />;
+          const asPdf = pdf([]);
+          asPdf.updateContainer(doc);
+          const blob = await asPdf.toBlob();
+
+          // Use the counter to name the PDF files
+          volunteersFolder.file(`volunteer${counter}.pdf`, blob, {
+            binary: true,
+          });
+          counter++; // Increment the counter for the next volunteer
+        }
+      }
+
+      // Generate the ZIP file and trigger the download
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      saveAs(zipBlob, `${userData.address}.zip`);
+    } catch (error) {
+      console.error("An error occurred while generating the PDF/ZIP:", error);
+    }
+  };
 
   const getBoothDetailsByATB = async () => {
     var myHeaders = new Headers();
@@ -69,7 +153,6 @@ const BoothAddress = () => {
 
   const handleClick = (data) => {
     setVolunteerData(data);
-    // navigate("/VolunteerDetailsCard");
     setIsVDCOpen(true);
   };
 
@@ -77,6 +160,30 @@ const BoothAddress = () => {
     <>
       <div className="pg__Wrap">
         <MobHeader></MobHeader>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            marginBottom: "10px",
+            marginRight: "10px",
+          }}
+        >
+          <button
+            style={{
+              border: "none",
+              backgroundColor: "#6B46C1",
+              color: "white",
+              fontSize: "14px",
+              borderRadius: "7px",
+              padding: "5px 10px",
+            }}
+            onClick={() =>
+              downloadPDF(boothData)
+            }
+          >
+            Download
+          </button>
+        </div>
         <div className="booth__Ad-sec">
           <div className="bt_Top-ad">
             <span>{boothAddress}</span>
