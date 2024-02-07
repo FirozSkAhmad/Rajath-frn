@@ -4,17 +4,23 @@ import SurveyorEditCustomModel from "./SurveyorEditCustomModel";
 import toast from "react-hot-toast";
 import "./SurveyorCustomModel.css";
 
+import sharedContext from "../../context/SharedContext";
+import { useContext } from "react";
+import Loader from "../Loader";
+
 const SurveyorCustomModal = ({ isOpen, onClose, data, fetchUserList }) => {
   if (!isOpen || !data) {
     return null;
   }
+
+  const { setLoader } = useContext(sharedContext);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);
 
   const handleDelete = (event, surveyor_id) => {
     event.preventDefault();
-
+    setLoader(true);
     // Perform actions for Reject button
     console.log("Delete clicked", surveyor_id);
 
@@ -36,14 +42,17 @@ const SurveyorCustomModal = ({ isOpen, onClose, data, fetchUserList }) => {
         if (result.status == 201) {
           toast.success("Surveyor Deleted successfully");
           fetchUserList();
+          setLoader(false);
           onClose();
         } else {
           toast.error(result.message);
+          setLoader(false);
         }
       })
       .catch((error) => {
         console.log("error", error);
         toast.error(error.message || "Failed to update Surveyor");
+        setLoader(false);
       });
   };
 
@@ -54,6 +63,7 @@ const SurveyorCustomModal = ({ isOpen, onClose, data, fetchUserList }) => {
 
   return (
     <>
+      <Loader />
       {isOpen && (
         <div className="custom-modal-overlay">
           <div className="custom-modal" style={{ position: "absolute" }}>

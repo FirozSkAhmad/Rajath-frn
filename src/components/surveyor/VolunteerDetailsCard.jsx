@@ -8,6 +8,7 @@ import { useContext } from "react";
 import { useLocation } from "react-router-dom";
 
 import VolunteerEditCard from "./VolunteerEditCard";
+import Loader from "../Loader";
 
 const VolunteerDetailsCard = ({
   isOpen,
@@ -15,12 +16,11 @@ const VolunteerDetailsCard = ({
   getBoothDetailsByATB,
   fetchVolunteersData,
 }) => {
-  const { volunteerData } = useContext(sharedContext);
+  const { volunteerData, setLoader } = useContext(sharedContext);
 
   const [isVECOpen, setIsVECOpen] = useState(false);
 
   let location = useLocation();
-  console.log("Current path:", location.pathname);
 
   if (!isOpen) {
     return null;
@@ -28,9 +28,8 @@ const VolunteerDetailsCard = ({
 
   const handleDelete = (event, volunteer_id) => {
     event.preventDefault();
-
+    setLoader(true);
     // Perform actions for Reject button
-    console.log("Delete clicked", volunteer_id);
 
     const token = localStorage.getItem("accessToken");
     var myHeaders = new Headers();
@@ -51,22 +50,27 @@ const VolunteerDetailsCard = ({
           toast.success("Volunteer Deleted successfully");
           if (location.pathname === "/booth-address") {
             getBoothDetailsByATB();
+            setLoader(false);
           } else if (location.pathname === "/surveyor/history") {
             fetchVolunteersData();
+            setLoader(false);
           }
           onClose();
         } else {
           toast.error(result.message);
+          setLoader(false);
         }
       })
       .catch((error) => {
         console.log("error", error);
         toast.error(error.message || "Failed to delete Volunteer");
+        setLoader(false);
       });
   };
 
   return (
     <>
+      <Loader />
       <div className="custom-modal-overlay">
         <div className="custom-modal" style={{ position: "absolute" }}>
           <div className="modal-header">

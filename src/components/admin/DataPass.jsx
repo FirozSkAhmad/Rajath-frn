@@ -1,7 +1,6 @@
 import React from "react";
 
 const DataPass = ({ selectedVolunteer, onClose }) => {
-  console.log(selectedVolunteer)
   return (
     <div className="modal admin_modal">
       <div className="modal-content">

@@ -12,11 +12,13 @@ import { useContext } from "react";
 import { Link } from "react-router-dom";
 import BASEURL from "../../data/baseurl";
 import toast from "react-hot-toast";
+import Loader from "../Loader";
 
 const OnBoard = () => {
   const navigate = useNavigate();
 
-  const { isMobModalOpen, closeMobModal } = useContext(sharedContext);
+  const { isMobModalOpen, closeMobModal, setLoader } =
+    useContext(sharedContext);
 
   let params = useParams();
   let [searchParams] = useSearchParams();
@@ -81,6 +83,7 @@ const OnBoard = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setLoader(true);
     // Implement your logic for form submission
     console.log("Form data submitted:", formData);
     var myHeaders = new Headers();
@@ -118,14 +121,17 @@ const OnBoard = () => {
         if (result.status == 201) {
           clearForm();
           toast.success("Added Volunteer successfully");
+          setLoader(false);
           navigate(-1);
         } else {
           toast.error(result.message);
+          setLoader(false);
         }
       })
       .catch((error) => {
         console.log("error", error);
         toast.error(error.message || "Failed to upload data");
+        setLoader(false);
       });
   };
 
@@ -150,6 +156,7 @@ const OnBoard = () => {
 
   return (
     <>
+      <Loader />
       <div className="pg__Wrap">
         <MobHeader></MobHeader>
         <div className="on__Board-sec">

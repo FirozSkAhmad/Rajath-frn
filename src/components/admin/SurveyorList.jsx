@@ -9,21 +9,20 @@ import SurveyorCustomModel from "./SurveyorCustomModel";
 
 import { TextField, Autocomplete } from "@mui/material";
 
-import { ThreeCircles } from "react-loader-spinner";
-
 import sharedContext from "../../context/SharedContext";
 import { useContext } from "react";
+import Loader from "../Loader";
 
 const SurveyorList = () => {
-  const { isMobModalOpen, closeMobModal } = useContext(sharedContext);
+  const { isMobModalOpen, closeMobModal, setLoader } =
+    useContext(sharedContext);
 
-  const [surveyorList, setSurveyorList] = useState(null);
+  const [surveyorList, setSurveyorList] = useState([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);
   const [listOfSurveyorNames, setListOfSurveyorNames] = useState([]);
   const [selectedSurveyorName, setSelectedSurveyorName] = useState(null);
-
 
   const token = localStorage.getItem("accessToken");
   // console.log(token);
@@ -56,8 +55,6 @@ const SurveyorList = () => {
       });
 
       setSurveyorList(filteredData);
-      // handleUserList(users);
-      // console.log(users)
     } catch (error) {
       console.log("error", error);
     }
@@ -92,9 +89,21 @@ const SurveyorList = () => {
     setIsModalOpen(true);
   };
 
-  const fetchData = () => {
-    fetchSurveyorList();
-    fetchSurveyorNames();
+  const fetchData = async () => {
+    setLoader(true); // Start loading before any async operation
+
+    try {
+      // Await all necessary fetch operations
+      await fetchSurveyorList();
+      await fetchSurveyorNames();
+    } catch (error) {
+      // Handle any errors that might occur during the fetch operations
+      console.error("An error occurred while fetching data:", error);
+      setLoader(false);
+    } finally {
+      // This will always run after all awaits are resolved/rejected
+      setLoader(false); // Stop loading after all async operations are done
+    }
   };
 
   useEffect(() => {
@@ -103,10 +112,29 @@ const SurveyorList = () => {
 
   return (
     <>
+      <Loader />
       <div className="pg__Wrap">
         <MobHeader></MobHeader>
+        <div className="hs_sh-as">
+              <Autocomplete
+                className="auto__Fld"
+                autoHighlight
+                options={listOfSurveyorNames}
+                value={selectedSurveyorName}
+                onChange={(event, newValue) => {
+                  setSelectedSurveyorName(newValue);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select Surveyor Name"
+                    variant="outlined"
+                    fullWidth
+                  />
+                )}
+              />
+            </div>
         <div className="approval__Sec">
-          
           <div className="app_Table">
             <table className="table align-middle">
               <thead className="align-middle table-primary">
@@ -117,22 +145,6 @@ const SurveyorList = () => {
                 </tr>
               </thead>
               <tbody className="align-middle">
-                {surveyorList === null ? (
-                  <tr>
-                    <td colSpan="4">
-                      <ThreeCircles
-                        visible={true}
-                        height="100"
-                        width="100"
-                        color="#4fa94d"
-                        ariaLabel="three-circles-loading"
-                        wrapperStyle={{}}
-                        wrapperClass="loader"
-                      />
-                    </td>
-                  </tr>
-                ) : (
-                  <>
                     {Array.isArray(surveyorList) && surveyorList.length > 0 ? (
                       surveyorList.map((item) => (
                         <tr key={item.id}>
@@ -158,8 +170,6 @@ const SurveyorList = () => {
                         </td>
                       </tr>
                     )}
-                  </>
-                )}
               </tbody>
             </table>
           </div>
@@ -173,7 +183,7 @@ const SurveyorList = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         data={modalData}
-        fetchUserList={() => fetchUserList()}
+        fetchUserList={() => fetchData()}
       ></SurveyorCustomModel>
     </>
   );

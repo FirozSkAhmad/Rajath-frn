@@ -4,6 +4,10 @@ import toast from "react-hot-toast";
 import { FaRegEdit } from "react-icons/fa";
 import "./SurveyorEditCustomModal.css";
 
+import sharedContext from "../../context/SharedContext";
+import { useContext } from "react";
+import Loader from "../Loader";
+
 const SurveyorEditCustomModal = ({
   isOpen,
   onClose,
@@ -14,6 +18,8 @@ const SurveyorEditCustomModal = ({
   if (!isOpen || !data) {
     return null;
   }
+
+  const { setLoader } = useContext(sharedContext);
 
   const [formData, setFormData] = useState({
     // Prefilled data from query parameters
@@ -52,9 +58,8 @@ const SurveyorEditCustomModal = ({
 
   const handleSubmit = (event, surveyor_id) => {
     event.preventDefault();
+    setLoader(true);
     // Perform actions for Accept button
-    console.log("Save clicked", surveyor_id);
-
     const token = localStorage.getItem("accessToken");
     var myHeaders = new Headers();
     myHeaders.append("Authorization", `Bearer ${token}`);
@@ -84,15 +89,18 @@ const SurveyorEditCustomModal = ({
         if (result.status == 201) {
           toast.success("updated Surveyor successfully");
           fetchUserList();
+          setLoader(false);
           onClose();
           closeSurveyorEditCustomModel();
         } else {
           toast.error(result.message);
+          setLoader(false);
         }
       })
       .catch((error) => {
         console.log("error", error);
         toast.error(error.message || "Failed to update Surveyor");
+        setLoader(false);
       });
   };
 
@@ -122,9 +130,10 @@ const SurveyorEditCustomModal = ({
 
   return (
     <>
+      <Loader />
       {isOpen && (
         <div className="custom-modal-overlay">
-          <div className="custom-modal" style={{position:'absolute'}}>
+          <div className="custom-modal" style={{ position: "absolute" }}>
             <div className="modal-header">
               <h2>Edit</h2>
               <span className="close-btn" onClick={onClose}>

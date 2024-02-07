@@ -8,7 +8,6 @@ import GreenSvg from "../../../public/assets/images/Green.svg";
 import RedSvg from "../../../public/assets/images/red.svg";
 import DetailModal from "./ModalDetail";
 
-
 import sharedContext from "../../context/SharedContext";
 import { useContext } from "react";
 import Loader from "../Loader";
@@ -37,7 +36,6 @@ const Admin = () => {
         const data = await response.json();
         setOverViewData(data.data);
       } catch (err) {
-        setLoader(false)
         console.log("Error fetching data :", err);
       }
     };
@@ -68,15 +66,28 @@ const Admin = () => {
         setAssemblyData(filteredData);
         setLoader(false);
       } catch (error) {
-        setLoader(false)
         console.error("Error fetching data:", error);
       }
     };
-    
-    setLoader(true);
-    fetchOverView();
-    fetchData();
-    setLoader(false);
+
+    const loadData = async () => {
+      setLoader(true); // Start loading before any async operation
+
+      try {
+        // Await all necessary fetch operations
+        await fetchOverView();
+        await fetchData();
+      } catch (error) {
+        // Handle any errors that might occur during the fetch operations
+        console.error("An error occurred while fetching data:", error);
+        setLoader(false);
+      } finally {
+        // This will always run after all awaits are resolved/rejected
+        setLoader(false); // Stop loading after all async operations are done
+      }
+    };
+
+    loadData();
 
     // Cleanup function
     return () => {

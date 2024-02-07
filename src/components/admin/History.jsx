@@ -61,7 +61,6 @@ const History = () => {
         const data = await response.json();
         setOverViewData(data.data);
       } catch (err) {
-        setLoader(false);
         console.log("Error fetching overview data:", err);
       }
     };
@@ -99,7 +98,6 @@ const History = () => {
 
         setAssemblyData(filteredData);
       } catch (error) {
-        setLoader(false);
         console.error("Error fetching data:", error);
       }
     };
@@ -121,15 +119,29 @@ const History = () => {
         setListOfTaluka(data.data);
         console.log(data.data);
       } catch (err) {
-        setLoader(false);
         console.log("Error fetching overview data:", err);
       }
     };
-    setLoader(true);
-    getTalukasByAssembly(selectedAssembly);
-    fetchData();
-    fetchOverView();
-    setLoader(false);
+
+    const loadData = async () => {
+      setLoader(true); // Start loading before any async operation
+
+      try {
+        // Await all necessary fetch operations
+        await getTalukasByAssembly(selectedAssembly);
+        await fetchData();
+        await fetchOverView();
+      } catch (error) {
+        // Handle any errors that might occur during the fetch operations
+        console.error("An error occurred while fetching data:", error);
+        setLoader(false);
+      } finally {
+        // This will always run after all awaits are resolved/rejected
+        setLoader(false); // Stop loading after all async operations are done
+      }
+    };
+
+    loadData();
   }, [selectedDate, selectedAssembly, selectedTaluka]);
 
   const getStatusIcon = (status) => {

@@ -14,9 +14,10 @@ import BASEURL from "../../data/baseurl";
 
 import sharedContext from "../../context/SharedContext";
 import { useContext } from "react";
+import Loader from "../Loader";
 
 const BoothAddress = () => {
-  const { isMobModalOpen, closeMobModal, setVolunteerData } =
+  const { isMobModalOpen, closeMobModal, setVolunteerData, setLoader } =
     useContext(sharedContext);
 
   let [searchParams] = useSearchParams();
@@ -25,10 +26,15 @@ const BoothAddress = () => {
   const [boothAddress, setBoothAddress] = useState("");
   const [volunteersData, setVolunteersData] = useState([]);
 
+  const [buttonText, setButtonText] = useState("Download");
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
   const [isVDCOpen, setIsVDCOpen] = useState(false);
 
   // Token
   const token = localStorage.getItem("accessToken");
+
+  const role_type = localStorage.getItem("role_type");
 
   // queryParam
   const assembly = searchParams.get("assembly");
@@ -60,6 +66,8 @@ const BoothAddress = () => {
 
   const downloadPDF = async (userData) => {
     try {
+      setButtonText("Downloading..."); // Change button text to 'Downloading...'
+      setIsButtonDisabled(true); // Disable button
       const zip = new JSZip();
       // Main folder name comes from userData.address
       const mainFolder = zip.folder(userData.address);
@@ -93,9 +101,7 @@ const BoothAddress = () => {
         let counter = 1; // Initialize counter for naming PDFs
         for (const volunteer of userData.volunteers) {
           if (volunteer.photo_url) {
-            volunteer.img_url = await convertImageToBase64(
-              volunteer.photo_url
-            );
+            volunteer.img_url = await convertImageToBase64(volunteer.photo_url);
           }
           const doc = <PdfGenerator volunteerData={volunteer} />;
           const asPdf = pdf([]);
@@ -113,6 +119,8 @@ const BoothAddress = () => {
       // Generate the ZIP file and trigger the download
       const zipBlob = await zip.generateAsync({ type: "blob" });
       saveAs(zipBlob, `${userData.address}.zip`);
+      setButtonText("Download"); // Reset button text to 'Download'
+      setIsButtonDisabled(false); // Enable button
     } catch (error) {
       console.error("An error occurred while generating the PDF/ZIP:", error);
     }
@@ -129,6 +137,7 @@ const BoothAddress = () => {
     };
 
     try {
+      setLoader(true);
       const response = await fetch(
         `${BASEURL.url}/auth/getBoothDetailsByATB?assembly=${assembly}&taluka=${taluka}&booth=${booth}`,
         requestOptions
@@ -142,8 +151,10 @@ const BoothAddress = () => {
       if (boothData.volunteers) {
         setVolunteersData(boothData.volunteers);
       }
+      setLoader(false);
     } catch (error) {
       console.log("error", error);
+      setLoader(false);
     }
   };
 
@@ -158,32 +169,34 @@ const BoothAddress = () => {
 
   return (
     <>
+      <Loader />
       <div className="pg__Wrap">
         <MobHeader></MobHeader>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            marginBottom: "10px",
-            marginRight: "10px",
-          }}
-        >
-          <button
+        {role_type === "SUPER ADMIN" ? (
+          <div
             style={{
-              border: "none",
-              backgroundColor: "#6B46C1",
-              color: "white",
-              fontSize: "14px",
-              borderRadius: "7px",
-              padding: "5px 10px",
+              display: "flex",
+              justifyContent: "flex-end",
+              marginBottom: "10px",
+              marginRight: "10px",
             }}
-            onClick={() =>
-              downloadPDF(boothData)
-            }
           >
-            Download
-          </button>
-        </div>
+            <button
+              style={{
+                border: "none",
+                backgroundColor: "#6B46C1",
+                color: "white",
+                fontSize: "14px",
+                borderRadius: "7px",
+                padding: "5px 10px",
+              }}
+              onClick={() => downloadPDF(boothData)}
+              disabled={isButtonDisabled}
+            >
+              {buttonText}
+            </button>
+          </div>
+        ) : null}
         <div className="booth__Ad-sec">
           <div className="bt_Top-ad">
             <span>{boothAddress}</span>

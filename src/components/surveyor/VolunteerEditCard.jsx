@@ -8,23 +8,23 @@ import { TextField, Autocomplete } from "@mui/material";
 
 import sharedContext from "../../context/SharedContext";
 import { useContext } from "react";
-import { useLocation } from 'react-router-dom';
+import { useLocation } from "react-router-dom";
+import Loader from "../Loader";
 
 const VolunteerEditCard = ({
   isOpen,
   onClose,
   closeVEC,
   getBoothDetailsByATB,
-  fetchVolunteersData
+  fetchVolunteersData,
 }) => {
   if (!isOpen) {
     return null;
   }
 
   let location = useLocation();
-  console.log("Current path:", location.pathname)
 
-  const { volunteerData } = useContext(sharedContext);
+  const { volunteerData, setLoader } = useContext(sharedContext);
 
   const [listOftalukas, setListOftalukas] = useState([]);
   const [listOfBooths, setListOfBooths] = useState([]);
@@ -130,7 +130,8 @@ const VolunteerEditCard = ({
         booth_address: volunteerData.booth_address || "",
         volunteer_name: volunteerData.volunteer_name || "",
         phn_no: volunteerData.phn_no || "",
-        emailId: volunteerData.emailId === "empty" ? null : volunteerData.emailId,
+        emailId:
+          volunteerData.emailId === "empty" ? null : volunteerData.emailId,
         gender: volunteerData.gender || "",
         age: volunteerData.age || "",
         caste: volunteerData.caste || "",
@@ -139,12 +140,28 @@ const VolunteerEditCard = ({
         designation: volunteerData.designation || "",
         profileImage: volunteerData.profileImage || null,
         // Populate other fields if necessary
-    });
-    
+      });
+
       setImagePreviewUrl(volunteerData.photo_url || "");
 
-      getTalukasByAssembly(volunteerData.assembly);
-      getBoothsByAT(volunteerData.assembly, volunteerData.taluka);
+      const loadData = async () => {
+        setLoader(true); // Start loading before any async operation
+
+        try {
+          // Await all necessary fetch operations
+          await getTalukasByAssembly(volunteerData.assembly);
+          await getBoothsByAT(volunteerData.assembly, volunteerData.taluka);
+        } catch (error) {
+          // Handle any errors that might occur during the fetch operations
+          console.error("An error occurred while fetching data:", error);
+          setLoader(false);
+        } finally {
+          // This will always run after all awaits are resolved/rejected
+          setLoader(false); // Stop loading after all async operations are done
+        }
+      };
+
+      loadData();
 
       // Revoke the image preview URL when the component is unmounted or data changes
       return () => {
@@ -157,8 +174,8 @@ const VolunteerEditCard = ({
 
   const handleSubmit = (event, volunteer_id) => {
     event.preventDefault();
+    setLoader(true);
     // Perform actions for Accept button
-    console.log("Save clicked", volunteer_id);
 
     const token = localStorage.getItem("accessToken");
     var myHeaders = new Headers();
@@ -200,18 +217,22 @@ const VolunteerEditCard = ({
           toast.success("updated volunteer successfully");
           if (location.pathname === "/booth-address") {
             getBoothDetailsByATB();
+            setLoader(false);
           } else if (location.pathname === "/surveyor/history") {
             fetchVolunteersData();
+            setLoader(false);
           }
           onClose();
-          closeVEC()
+          closeVEC();
         } else {
           toast.error(result.message);
+          setLoader(false);
         }
       })
       .catch((error) => {
         console.log("error", error);
         toast.error(error.message || "Failed to update Surveyor");
+        setLoader(false);
       });
   };
 
@@ -299,6 +320,7 @@ const VolunteerEditCard = ({
 
   return (
     <>
+      <Loader />
       <div className="custom-modal-overlay">
         <div className="custom-modal" style={{ position: "absolute" }}>
           <div className="modal-header">

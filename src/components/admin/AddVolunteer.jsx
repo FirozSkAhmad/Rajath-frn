@@ -10,16 +10,17 @@ import PdfGenerator from "./PdfGenerator";
 import { Link } from "react-router-dom";
 import BASEURL from "../../data/baseurl";
 
-import { ThreeCircles } from "react-loader-spinner";
-
 import sharedContext from "../../context/SharedContext";
 import { useContext } from "react";
-// import { PDFDownloadLink } from "@react-pdf/renderer";
+import Loader from "../Loader";
 
 const AddVolunteer = () => {
-  const { isMobModalOpen, closeMobModal } = useContext(sharedContext);
+  const { isMobModalOpen, closeMobModal, setLoader } =
+    useContext(sharedContext);
 
   const [atsList, setAtsList] = useState("");
+  const [buttonText, setButtonText] = useState("Download");
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   const token = localStorage.getItem("accessToken");
 
@@ -95,6 +96,8 @@ const AddVolunteer = () => {
 
   const downloadPDF = async (atsList) => {
     try {
+      setButtonText("Downloading..."); // Change button text to 'Downloading...'
+      setIsButtonDisabled(true); // Disable button
       const zip = new JSZip();
       const mainFolder = zip.folder("Assemblies");
 
@@ -170,8 +173,13 @@ const AddVolunteer = () => {
       // Generate the ZIP file and trigger the download, use a generic name or derive from a valid variable
       const zipBlob = await zip.generateAsync({ type: "blob" });
       saveAs(zipBlob, "documents.zip"); // Changed to a generic name
+
+      setButtonText("Download"); // Reset button text to 'Download'
+      setIsButtonDisabled(false); // Enable button
     } catch (error) {
       console.error("An error occurred while generating the PDF/ZIP:", error);
+      setButtonText("Download"); // Ensure button text resets even if there's an error
+      setIsButtonDisabled(false); // Re-enable button on error
     }
   };
 
@@ -187,6 +195,7 @@ const AddVolunteer = () => {
       };
 
       try {
+        setLoader(true);
         const response = await fetch(
           `${BASEURL.url}/auth/getATS`,
           requestOptions
@@ -195,8 +204,10 @@ const AddVolunteer = () => {
         const atsData = data.data;
         console.log("ATS", data);
         setAtsList(atsData);
+        setLoader(false);
       } catch (error) {
         console.log("error", error);
+        setLoader(false);
       }
     };
 
@@ -205,18 +216,7 @@ const AddVolunteer = () => {
 
   const viewAtsList = (data) => {
     if (!data) {
-      // return <div>Data is loading...</div>;
-      return (
-        <ThreeCircles
-          visible={true}
-          height="100"
-          width="100"
-          color="#4fa94d"
-          ariaLabel="three-circles-loading"
-          wrapperStyle={{}}
-          wrapperClass="loader"
-        />
-      );
+      return <Loader />;
     }
 
     return Object.entries(data).map(([location, items]) => (
@@ -277,6 +277,7 @@ const AddVolunteer = () => {
 
   return (
     <>
+      <Loader />
       <div className="pg__Wrap">
         <MobHeader></MobHeader>
         <div
@@ -297,8 +298,9 @@ const AddVolunteer = () => {
               padding: "5px 10px",
             }}
             onClick={() => downloadPDF(atsList)}
+            disabled={isButtonDisabled}
           >
-            Download
+            {buttonText}
           </button>
         </div>
         <div className="sur__Sec-wrap">

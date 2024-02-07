@@ -11,21 +11,27 @@ import { useSearchParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import BASEURL from "../../data/baseurl";
 
-import { ThreeCircles } from "react-loader-spinner";
-
 import sharedContext from "../../context/SharedContext";
 import { useContext } from "react";
+import Loader from "../Loader";
 
 const PollingBooth = () => {
-  const { isMobModalOpen, closeMobModal } = useContext(sharedContext);
+  const { isMobModalOpen, closeMobModal, setLoader } =
+    useContext(sharedContext);
 
   let [searchParams] = useSearchParams();
 
   const [pollingBooths, setPollingBooths] = useState("");
   const [totalBooths, setTotalBooths] = useState("");
+  const [boothStatusCount, setBoothStatusCount] = useState("");
+
+  const [buttonText, setButtonText] = useState("Download");
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   // Token
   const token = localStorage.getItem("accessToken");
+
+  const role_type = localStorage.getItem("role_type");
 
   // queryParam
   const assembly = searchParams.get("assembly");
@@ -80,6 +86,8 @@ const PollingBooth = () => {
 
   const downloadPDF = async (pollingBooths) => {
     try {
+      setButtonText("Downloading..."); // Change button text to 'Downloading...'
+      setIsButtonDisabled(true); // Disable button
       const zip = new JSZip();
       const mainFolder = zip.folder("Booths");
 
@@ -138,10 +146,34 @@ const PollingBooth = () => {
       // Generate the ZIP file and trigger the download, use a generic name or derive from a valid variable
       const zipBlob = await zip.generateAsync({ type: "blob" });
       saveAs(zipBlob, "documents.zip"); // Changed to a generic name
+      setButtonText("Download"); // Reset button text to 'Download'
+      setIsButtonDisabled(false); // Enable button
     } catch (error) {
       console.error("An error occurred while generating the PDF/ZIP:", error);
     }
   };
+
+  function countStatus(objects) {
+    let statusCount = {
+      RED: 0,
+      YELLOW: 0,
+      GREEN: 0,
+    };
+
+    // Iterate through each object in the array
+    objects.forEach((obj) => {
+      // Increment the count for the corresponding status
+      if (obj.status === "RED") {
+        statusCount.RED += 1;
+      } else if (obj.status === "YELLOW") {
+        statusCount.YELLOW += 1;
+      } else if (obj.status === "GREEN") {
+        statusCount.GREEN += 1;
+      }
+    });
+
+    return statusCount;
+  }
 
   useEffect(() => {
     const getPollingBooths = async () => {
@@ -154,17 +186,22 @@ const PollingBooth = () => {
       };
 
       try {
+        setLoader(true);
         const response = await fetch(
           `${BASEURL.url}/auth/getBoothsByAT?assembly=${assembly}&taluka=${taluka}`,
           requestOptions
         );
         const data = await response.json();
         const pollingBoothsData = data.data.booths;
+        const boothStatusCount = countStatus(pollingBoothsData);
         const totalBooths = pollingBoothsData.length;
         setPollingBooths(pollingBoothsData);
+        setBoothStatusCount(boothStatusCount);
         setTotalBooths(totalBooths);
+        setLoader(false);
       } catch (error) {
         console.log("error", error);
+        setLoader(false);
       }
     };
     getPollingBooths();
@@ -173,17 +210,7 @@ const PollingBooth = () => {
   const veiwPollingBooths = (data) => {
     if (!data) {
       // return <div>Data is loading...</div>;
-      return (
-        <ThreeCircles
-          visible={true}
-          height="100"
-          width="100"
-          color="#4fa94d"
-          ariaLabel="three-circles-loading"
-          wrapperStyle={{}}
-          wrapperClass="loader"
-        />
-      );
+      return <Loader />;
     }
 
     return (
@@ -233,30 +260,36 @@ const PollingBooth = () => {
 
   return (
     <>
+      <Loader />
       <div className="pg__Wrap">
         <MobHeader></MobHeader>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            marginBottom: "10px",
-            marginRight: "10px",
-          }}
-        >
-          <button
+        {role_type === "SUPER ADMIN" ? (
+          <div
             style={{
-              border: "none",
-              backgroundColor: "#6B46C1",
-              color: "white",
-              fontSize: "14px",
-              borderRadius: "7px",
-              padding: "5px 10px",
+              display: "flex",
+              justifyContent: "flex-end",
+              marginBottom: "10px",
+              marginRight: "10px",
             }}
-            onClick={() => downloadPDF(pollingBooths)}
           >
-            Download
-          </button>
-        </div>
+            <button
+              style={{
+                border: "none",
+                backgroundColor: "#6B46C1",
+                color: "white",
+                fontSize: "14px",
+                borderRadius: "7px",
+                padding: "5px 10px",
+              }}
+              onClick={() => downloadPDF(pollingBooths)}
+              disabled={isButtonDisabled}
+            >
+              {buttonText}
+            </button>
+          </div>
+        ) : (
+          null
+        )}
         <div className="pl_Bth-sec">
           <div className="pl_booths-info">
             <div className="pl-bt-in-row1">
@@ -271,16 +304,22 @@ const PollingBooth = () => {
               </div>
               <div className="pl_Rem-sec">
                 <div className="pl-remark_sec pl-remark_sec-g">
-                  <i className="fa-solid fa-check"></i>
-                  <span>250</span>
+                  <span className="sr-red">
+                    <i className="fa-solid fa-xmark"></i>
+                  </span>
+                  <span>{boothStatusCount.RED}</span>
                 </div>
                 <div className="pl-remark_sec pl-remark_sec-y">
-                  <i className="fa-solid fa-check"></i>
-                  <span>250</span>
+                  <span className="sr-yellow">
+                    <i className="fa-solid fa-check"></i>
+                  </span>
+                  <span>{boothStatusCount.YELLOW}</span>
                 </div>
                 <div className="pl-remark_sec pl-remark_sec-r">
-                  <i className="fa-solid fa-xmark"></i>
-                  <span>250</span>
+                  <span className="sr-green">
+                    <i className="fa-solid fa-check"></i>
+                  </span>
+                  <span>{boothStatusCount.GREEN}</span>
                 </div>
               </div>
             </div>
